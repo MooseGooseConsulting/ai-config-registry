@@ -1,29 +1,33 @@
 param(
     [string]$Project = "codingagents",
-    [string]$Config = "dev"
+    [string]$Config = "dev",
+    [string]$ManifestPath
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "doppler-manifest.ps1")
 
 function Write-Step {
     param([string]$Message)
     Write-Host "==> $Message"
 }
 
-$expectedKeys = @(
-    "MORPH_API_KEY",
-    "TAVILY_API_KEY",
-    "EXA_API_KEY",
-    "CONTEXT7_API_KEY",
-    "STITCH_GOOGLE_API_KEY",
-    "GITHUB_PERSONAL_ACCESS_TOKEN",
-    "GOOGLE_OAUTH_CLIENT_ID",
-    "GOOGLE_OAUTH_CLIENT_SECRET",
-    "SUPABASE_SERVICE_KEY",
-    "APIFY_TOKEN",
-    "PLAID_CLIENT_ID",
-    "PLAID_SECRET"
-)
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+if (-not $ManifestPath) {
+    $ManifestPath = Join-Path $repoRoot "working\doppler-migration-manifest.json"
+}
+if (-not (Test-Path $ManifestPath)) {
+    throw "Migration manifest not found: $ManifestPath"
+}
+
+$manifest = Get-Content -Path $ManifestPath -Raw | ConvertFrom-Json
+if ($manifest.project) { $Project = $manifest.project }
+if ($manifest.config) { $Config = $manifest.config }
+
+$expectedEntries = @(Get-ManifestSecretEntries -Manifest $manifest)
+if ($expectedEntries.Count -eq 0) {
+    throw "No doppler_key entries found in manifest."
+}
 
 if (-not (Get-Command doppler -ErrorAction SilentlyContinue)) {
     throw "Doppler CLI is not installed or not on PATH."
@@ -64,22 +68,30 @@ foreach ($name in $existingNames) {
     $existingLookup[$name.Trim()] = $true
 }
 
-$missing = @()
-foreach ($expected in $expectedKeys) {
+$missingRequired = @()
+$missingVerification = @()
+foreach ($entry in $expectedEntries) {
+    $expected = $entry.DopplerKey
+    $category = if ($entry.Required) { "required" } else { "verification" }
     if ($existingLookup.ContainsKey($expected)) {
-        Write-Host "[OK] $expected"
+        Write-Host "[OK][$category] $expected"
     }
     else {
-        Write-Host "[MISSING] $expected"
-        $missing += $expected
+        Write-Host "[MISSING][$category] $expected"
+        if ($entry.Required) {
+            $missingRequired += $expected
+        }
+        else {
+            $missingVerification += $expected
+        }
     }
 }
 
 Write-Host ""
-if ($missing.Count -eq 0) {
-    Write-Host "Check passed: all expected keys exist."
+if (($missingRequired.Count + $missingVerification.Count) -eq 0) {
+    Write-Host "Check passed: all expected manifest keys exist."
     exit 0
 }
 
-Write-Host "Check failed: $($missing.Count) expected key(s) missing."
+Write-Host "Check failed: $($missingRequired.Count) required and $($missingVerification.Count) verification key(s) missing."
 exit 2

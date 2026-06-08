@@ -1,95 +1,107 @@
 {
+  "manifest_version": 2,
   "project": "codingagents",
   "config": "dev",
-  "description": "Phase C migration manifest for moving local AI tool secrets into Doppler without exposing secret values.",
+  "description": "Public-safe migration manifest for moving local AI tool secrets into Doppler without exposing secret values or personal-machine paths.",
+  "source_catalog": {
+    "cursor_mcp": {
+      "label": "Cursor MCP config",
+      "path_template": "%USERPROFILE%/.cursor/mcp.json",
+      "public_note": "Local MCP server configuration; may contain environment references."
+    },
+    "codex_config": {
+      "label": "Codex config",
+      "path_template": "%USERPROFILE%/.codex/config.toml",
+      "public_note": "Local Codex CLI configuration."
+    },
+    "gemini_antigravity_mcp": {
+      "label": "Gemini Antigravity MCP config",
+      "path_template": "%USERPROFILE%/.gemini/antigravity/mcp_config.json",
+      "public_note": "Local Gemini Antigravity MCP configuration."
+    },
+    "omc_registry": {
+      "label": "OMC MCP registry",
+      "path_template": "%USERPROFILE%/.omc/mcp-registry.json",
+      "public_note": "Local OMC registry metadata."
+    },
+    "claude_json": {
+      "label": "Claude JSON config",
+      "path_template": "%USERPROFILE%/.claude.json",
+      "public_note": "Local Claude configuration."
+    }
+  },
   "secrets": [
     {
       "source_key": "MORPH_API_KEY",
       "doppler_key": "MORPH_API_KEY",
-      "source_paths": [
-        "C:/Users/pmacl/.cursor/mcp.json",
-        "C:/Users/pmacl/.codex/config.toml",
-        "C:/Users/pmacl/.gemini/antigravity/mcp_config.json",
-        "C:/Users/pmacl/.omc/mcp-registry.json"
-      ]
+      "required": false,
+      "source_refs": ["cursor_mcp", "codex_config", "gemini_antigravity_mcp", "omc_registry"]
     },
     {
       "source_key": "TAVILY_API_KEY",
       "doppler_key": "TAVILY_API_KEY",
-      "source_paths": [
-        "C:/Users/pmacl/.codex/config.toml",
-        "C:/Users/pmacl/.claude.json"
-      ]
+      "required": false,
+      "source_refs": ["codex_config", "claude_json"]
     },
     {
       "source_key": "EXA_API_KEY",
       "doppler_key": "EXA_API_KEY",
-      "source_paths": [
-        "C:/Users/pmacl/.codex/config.toml"
-      ]
+      "required": false,
+      "source_refs": ["codex_config"]
     },
     {
       "source_key": "CONTEXT7_API_KEY",
       "doppler_key": "CONTEXT7_API_KEY",
-      "source_paths": [
-        "C:/Users/pmacl/.codex/config.toml"
-      ]
+      "required": false,
+      "source_refs": ["codex_config"]
     },
     {
       "source_key": "STITCH_GOOGLE_API_KEY",
       "doppler_key": "STITCH_GOOGLE_API_KEY",
-      "source_paths": [
-        "C:/Users/pmacl/.gemini/antigravity/mcp_config.json"
-      ]
+      "required": false,
+      "source_refs": ["gemini_antigravity_mcp"]
     },
     {
       "source_key": "GITHUB_PERSONAL_ACCESS_TOKEN",
       "doppler_key": "GITHUB_PERSONAL_ACCESS_TOKEN",
-      "source_paths": [
-        "C:/Users/pmacl/.gemini/antigravity/mcp_config.json"
-      ]
+      "required": false,
+      "source_refs": ["gemini_antigravity_mcp"]
     },
     {
       "source_key": "GOOGLE_OAUTH_CLIENT_ID",
       "doppler_key": "GOOGLE_OAUTH_CLIENT_ID",
-      "source_paths": [
-        "C:/Users/pmacl/.claude.json"
-      ]
+      "required": false,
+      "source_refs": ["claude_json"]
     },
     {
       "source_key": "GOOGLE_OAUTH_CLIENT_SECRET",
       "doppler_key": "GOOGLE_OAUTH_CLIENT_SECRET",
-      "source_paths": [
-        "C:/Users/pmacl/.claude.json"
-      ]
+      "required": false,
+      "source_refs": ["claude_json"]
     },
     {
       "source_key": "SUPABASE_SERVICE_KEY",
       "doppler_key": "SUPABASE_SERVICE_KEY",
-      "source_paths": [
-        "C:/Users/pmacl/.cursor/mcp.json"
-      ]
+      "required": true,
+      "source_refs": ["cursor_mcp"]
     },
     {
       "source_key": "APIFY_TOKEN",
       "doppler_key": "APIFY_TOKEN",
-      "source_paths": [
-        "C:/Users/pmacl/.cursor/mcp.json"
-      ]
+      "required": false,
+      "source_refs": ["cursor_mcp"]
     },
     {
       "source_key": "PLAID_CLIENT_ID",
       "doppler_key": "PLAID_CLIENT_ID",
-      "source_paths": [
-        "C:/Users/pmacl/.cursor/mcp.json"
-      ]
+      "required": false,
+      "source_refs": ["cursor_mcp"]
     },
     {
       "source_key": "PLAID_SECRET",
       "doppler_key": "PLAID_SECRET",
-      "source_paths": [
-        "C:/Users/pmacl/.cursor/mcp.json"
-      ]
+      "required": false,
+      "source_refs": ["cursor_mcp"]
     }
   ]
 }

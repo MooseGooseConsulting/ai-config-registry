@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+
+remote_name="${1:-origin}"
+remote_head="$(git symbolic-ref --quiet --short "refs/remotes/$remote_name/HEAD" 2>/dev/null || true)"
+if [ -z "$remote_head" ]; then
+  remote_head="$remote_name/main"
+fi
+
+while read local_ref local_sha remote_ref remote_sha
+do
+  if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+    continue
+  fi
+
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    base="$(git merge-base "$local_sha" "$remote_head" 2>/dev/null || git rev-list --max-parents=0 "$local_sha" | tail -n 1)"
+    rev_range="$base..$local_sha"
+  else
+    rev_range="$remote_sha..$local_sha"
+  fi
+
+  python scripts/secret_guard.py --range "$rev_range"
+done

@@ -10,7 +10,7 @@ This repository stores registry metadata and automation for AI tooling configura
 
 ## Boundaries
 
-- Do not place implementation files for this project in `D:\_projects\Polypipeline`.
+- Do not place implementation files for this project in unrelated sibling repositories.
 - Do not commit plaintext service secrets.
 - Use environment variables (for example `SUPABASE_SERVICE_KEY`) for runtime authentication.
 
@@ -18,7 +18,7 @@ This repository stores registry metadata and automation for AI tooling configura
 
 **Read [docs/SECURITY.md](docs/SECURITY.md) before enabling Supabase upsert.**
 
-Supabase `public` tables without Row Level Security can be exposed via the `anon` API key. This repo ships `sql/002_row_level_security.sql` to deny anon/authenticated access. Apply it with bootstrap, then verify:
+Supabase `public` tables without Row Level Security can be exposed via the `anon` API key. This repo ships `sql/002_row_level_security.sql` to deny anon/authenticated access. Apply it with bootstrap, then verify. Strict verification requires `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, and `SUPABASE_ANON_KEY`; `-SchemaOnly` is an explicit partial check.
 
 ```powershell
 .\scripts\bootstrap_supabase.ps1
@@ -26,6 +26,8 @@ Supabase `public` tables without Row Level Security can be exposed via the `anon
 ```
 
 Secret **values** are never uploaded. Secret file **paths** are stripped from upserts unless you pass `--include-secret-locations` (not recommended).
+
+`sync-registry.ps1 -UpsertSupabase` runs `verify_supabase_security.ps1` first and refuses the upsert unless the verifier passes. The only bypass is the explicitly named `-AllowUnsafeSupabaseUpsert` switch.
 
 ## Setup
 
@@ -38,12 +40,12 @@ Secret **values** are never uploaded. Secret file **paths** are stripped from up
 ### First run
 
 ```powershell
-cd D:\_projects\ai-config-registry
+cd <repo-root>
 
 # Local scan + dashboard (no Supabase writes)
 .\scripts\sync-registry.ps1 -Verbose
 
-# Full sync with Supabase upsert (loads secrets from Doppler)
+# Full sync with Supabase upsert (verifies RLS/anon denial first; loads secrets from Doppler)
 .\scripts\sync-registry.ps1 -UpsertSupabase -Verbose
 ```
 
@@ -64,6 +66,23 @@ Target project ref: `agookcvqnalxxcnhttmd`
 - Migration manifest: `working/doppler-migration-manifest.json`
 - Validate keys: `.\scripts\check-doppler-state.ps1`
 - Interactive push: `.\scripts\doppler-push-secrets.ps1` (reads manifest; use `-DryRun` to preview)
+- Manifest v2 uses `source_refs` and a public-safe `source_catalog`; v1 `source_paths` are still accepted by scripts for compatibility but are not printed by default.
+- Secret values are sent to `doppler secrets set <KEY>` over stdin with `--silent`, not as `KEY=value` command arguments.
+
+### Secret guard
+
+Install repo hooks:
+
+```powershell
+.\scripts\install-git-hooks.ps1
+```
+
+Manual scans:
+
+```powershell
+python scripts/secret_guard.py --all-files
+python scripts/secret_guard.py --staged
+```
 
 ### Tests
 
@@ -104,6 +123,7 @@ The sync script runs scanner first, then dashboard generator, unless explicitly 
 - Skip dashboard: `.\scripts\sync-registry.ps1 -NoDashboard`
 - Use PowerShell verbose output: `.\scripts\sync-registry.ps1 -Verbose`
 - Attempt Supabase upsert during sync: `.\scripts\sync-registry.ps1 -UpsertSupabase`
+- Unsafe verifier bypass, for emergency/manual recovery only: `.\scripts\sync-registry.ps1 -UpsertSupabase -AllowUnsafeSupabaseUpsert`
 
 If scanner/dashboard scripts are missing, sync fails with actionable guidance and expected path candidates.
 
@@ -160,8 +180,8 @@ Scanner outputs are written to:
 
 ## Doppler Workflow (Phase C)
 
-- Migration manifest: `working/doppler-migration-manifest.json` (keys, target Doppler key names, and source paths; no values).
+- Migration manifest: `working/doppler-migration-manifest.json` (keys, target Doppler key names, and public-safe source refs; no values).
 - Push interactively: `.\scripts\doppler-push-secrets.ps1` (reads manifest; defaults to project `codingagents`, config `dev`).
 - Preview without writing: `.\scripts\doppler-push-secrets.ps1 -DryRun`.
 - Read-only validation: `.\scripts\check-doppler-state.ps1`.
-- These scripts are designed to avoid echoing secret values to console output.
+- These scripts are designed to avoid echoing secret values to console output or passing values on command argv.

@@ -1,5 +1,7 @@
 # Forensic Audit — ai-config-registry
 
+**Status:** Pre-fix baseline retained for historical comparison. Concrete workstation paths have been generalized for public safety.
+
 **Audit date:** 2026-06-08  
 **Auditor mode:** read-only scan; no Supabase writes, no Doppler push, no secret values printed.
 
@@ -9,7 +11,7 @@
 
 | Capability | Claimed status | Evidence found | Verdict |
 |------------|----------------|----------------|---------|
-| Local config scan (skills, hooks, ecosystems) | README L27–28: `uv run python scripts/registry_scanner.py` | `registry_scan_lib.py` discovers SKILL.md across 13 ecosystem paths; fresh run produced 390 skills, 4 hooks, 13 ecosystems | **WAS-RUN-AND-CORRECT** (scan works; paths hardcoded to `C:\Users\pmacl`) |
+| Local config scan (skills, hooks, ecosystems) | README L27–28: `uv run python scripts/registry_scanner.py` | `registry_scan_lib.py` discovers SKILL.md across 13 ecosystem paths; fresh run produced 390 skills, 4 hooks, 13 ecosystems | **WAS-RUN-AND-CORRECT** (pre-fix scan worked; WSL profile paths used a concrete local username) |
 | MCP server discovery | README L32–36: MCP configs enumerated | `parse_mcp_configs()` reads 6 config files; snapshot lists 14 unique server names; rows are name-only stubs (`command_or_url: ""`) | **RUNS** (names only; enrichment not implemented) |
 | Extra surfaces (AppData, shell, runtime inventory) | README L32–36 | `enumerate_extra_surfaces()` in lib; summary shows 2/2 appdata, 2/6 shell, 4/5 transcript paths | **WAS-RUN-AND-CORRECT** (`.codex/logs` misclassified as file when missing) |
 | CLI tool inventory | README L35 | `check_cli_tools()` runs 24 tools; summary shows available/missing per tool | **WAS-RUN-AND-CORRECT** |
@@ -33,7 +35,7 @@
 | Source | Claim | Reality |
 |--------|-------|---------|
 | `README.md` L58–59 | `-UpsertSupabase` switch on `sync-registry.ps1` | `sync-registry.ps1` has no such parameter (lines 1–7 params only) |
-| `README.md` L23 | MCP config updated in `C:\Users\pmacl\.cursor\mcp.json` | Out-of-repo change; not verifiable from repo artifacts |
+| `README.md` L23 | MCP config updated in `%USERPROFILE%\.cursor\mcp.json` | Out-of-repo change; not verifiable from repo artifacts |
 | `working/phase-status.md` L21 | Optional bootstrap "not done" (`[ ]`) | Consistent — bootstrap is instructions-only |
 | `working/phase-status.md` L19–20 | Doppler `SUPABASE_SERVICE_KEY` confirmed | Cannot verify from repo; Doppler scripts exist |
 | `scripts/bootstrap_supabase.ps1` L24 | "Applying schema with db push path" | Only prints commands; `exit 0` without executing (L31) |
@@ -56,7 +58,7 @@
 | Ecosystems | 13 | 13 |
 | Exit code | — | 0 |
 
-**Verdict:** **clean** — scanner executes successfully and produces real machine-specific data (paths under `C:\Users\pmacl`, real skill names like "Chat History Extractor"). Prior artifact was a genuine prior run, not a stub.
+**Verdict:** **clean** — scanner executes successfully and produces real machine-specific data (paths under the local Windows profile, real skill names like "Chat History Extractor"). Prior artifact was a genuine prior run, not a stub.
 
 ---
 
@@ -88,3 +90,22 @@
 ## 5. ONE-LINE BOTTOM LINE
 
 **Partly yes** — the scanner genuinely ran and produced real local inventory (390 skills, 14 MCP names, 13 ecosystems); dashboard, Supabase upsert, sync switch, and git backup are broken or never implemented, but the core idea and scan logic are worth keeping and finishing.
+
+---
+
+## 6. POST-FIX VERIFICATION RECORD
+
+**Verification date:** 2026-06-08
+**Scope:** registry truth and secret-guard hardening PR.
+
+| Area | Result | Evidence |
+|------|--------|----------|
+| Pytest | **pass** | `uv run --extra dev pytest -q` -> 26 passed |
+| Repo secret guard | **pass** | `python scripts/secret_guard.py --all-files` -> Secret guard passed |
+| Local sync | **pass** | `.\scripts\sync-registry.ps1 -Verbose` -> scanner/dashboard complete; Supabase mode disabled |
+| Doppler names check | **partial** | `.\scripts\check-doppler-state.ps1` -> authenticated; `SUPABASE_SERVICE_KEY` present; 10 verification keys missing |
+| Supabase strict verifier | **blocked** | `.\scripts\verify_supabase_security.ps1` -> RLS queries failed; bootstrap/RLS not live-verified |
+| Supabase upsert | **blocked fail-closed** | `.\scripts\sync-registry.ps1 -UpsertSupabase -Verbose` -> verifier failed before upsert |
+| Doppler push dry-run | **pass** | `.\scripts\doppler-push-secrets.ps1 -DryRun` -> 12 manifest keys parsed; no values requested or printed |
+
+**Full-stack complete remains false** until Supabase is active, bootstrap/RLS/anon-denial verification passes, Doppler has the needed keys for the target workflow, and one `-UpsertSupabase` run exits 0.

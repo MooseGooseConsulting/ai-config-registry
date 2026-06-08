@@ -1,0 +1,26 @@
+function Get-ManifestSecretEntries {
+    param([object]$Manifest)
+
+    $entries = @()
+    foreach ($entry in @($Manifest.secrets)) {
+        if (-not $entry.doppler_key) {
+            continue
+        }
+
+        $sourceRefs = @()
+        if ($entry.source_refs) {
+            $sourceRefs = @($entry.source_refs)
+        }
+        elseif ($entry.source_paths) {
+            # v1 compatibility: keep old manifests readable without printing machine paths.
+            $sourceRefs = @($entry.source_paths | ForEach-Object { "legacy_source_path" })
+        }
+
+        $entries += [pscustomobject]@{
+            DopplerKey = [string]$entry.doppler_key
+            SourceRefs = $sourceRefs
+            Required = [bool]$entry.required
+        }
+    }
+    return $entries
+}
