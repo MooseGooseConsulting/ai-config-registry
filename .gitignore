@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+supabase/.temp/
+
+# Machine-specific generated artifacts
+working/registry_snapshot.json
+working/registry-dashboard.html
+working/registry_summary.md

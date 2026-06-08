@@ -1,0 +1,95 @@
+{
+  "project": "codingagents",
+  "config": "dev",
+  "description": "Phase C migration manifest for moving local AI tool secrets into Doppler without exposing secret values.",
+  "secrets": [
+    {
+      "source_key": "MORPH_API_KEY",
+      "doppler_key": "MORPH_API_KEY",
+      "source_paths": [
+        "C:/Users/pmacl/.cursor/mcp.json",
+        "C:/Users/pmacl/.codex/config.toml",
+        "C:/Users/pmacl/.gemini/antigravity/mcp_config.json",
+        "C:/Users/pmacl/.omc/mcp-registry.json"
+      ]
+    },
+    {
+      "source_key": "TAVILY_API_KEY",
+      "doppler_key": "TAVILY_API_KEY",
+      "source_paths": [
+        "C:/Users/pmacl/.codex/config.toml",
+        "C:/Users/pmacl/.claude.json"
+      ]
+    },
+    {
+      "source_key": "EXA_API_KEY",
+      "doppler_key": "EXA_API_KEY",
+      "source_paths": [
+        "C:/Users/pmacl/.codex/config.toml"
+      ]
+    },
+    {
+      "source_key": "CONTEXT7_API_KEY",
+      "doppler_key": "CONTEXT7_API_KEY",
+      "source_paths": [
+        "C:/Users/pmacl/.codex/config.toml"
+      ]
+    },
+    {
+      "source_key": "STITCH_GOOGLE_API_KEY",
+      "doppler_key": "STITCH_GOOGLE_API_KEY",
+      "source_paths": [
+        "C:/Users/pmacl/.gemini/antigravity/mcp_config.json"
+      ]
+    },
+    {
+      "source_key": "GITHUB_PERSONAL_ACCESS_TOKEN",
+      "doppler_key": "GITHUB_PERSONAL_ACCESS_TOKEN",
+      "source_paths": [
+        "C:/Users/pmacl/.gemini/antigravity/mcp_config.json"
+      ]
+    },
+    {
+      "source_key": "GOOGLE_OAUTH_CLIENT_ID",
+      "doppler_key": "GOOGLE_OAUTH_CLIENT_ID",
+      "source_paths": [
+        "C:/Users/pmacl/.claude.json"
+      ]
+    },
+    {
+      "source_key": "GOOGLE_OAUTH_CLIENT_SECRET",
+      "doppler_key": "GOOGLE_OAUTH_CLIENT_SECRET",
+      "source_paths": [
+        "C:/Users/pmacl/.claude.json"
+      ]
+    },
+    {
+      "source_key": "SUPABASE_SERVICE_KEY",
+      "doppler_key": "SUPABASE_SERVICE_KEY",
+      "source_paths": [
+        "C:/Users/pmacl/.cursor/mcp.json"
+      ]
+    },
+    {
+      "source_key": "APIFY_TOKEN",
+      "doppler_key": "APIFY_TOKEN",
+      "source_paths": [
+        "C:/Users/pmacl/.cursor/mcp.json"
+      ]
+    },
+    {
+      "source_key": "PLAID_CLIENT_ID",
+      "doppler_key": "PLAID_CLIENT_ID",
+      "source_paths": [
+        "C:/Users/pmacl/.cursor/mcp.json"
+      ]
+    },
+    {
+      "source_key": "PLAID_SECRET",
+      "doppler_key": "PLAID_SECRET",
+      "source_paths": [
+        "C:/Users/pmacl/.cursor/mcp.json"
+      ]
+    }
+  ]
+}
