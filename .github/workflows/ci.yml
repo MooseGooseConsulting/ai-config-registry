@@ -1,0 +1,90 @@
+# Python CI + SAST + dependency audit. Merge gate: ci / summarize.
+
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ci / test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # pin: actions/checkout@v4.2.2
+
+      - uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a  # pin: astral-sh/setup-uv@v4.2.0
+        with:
+          enable-cache: true
+
+      - name: Sync dependencies
+        run: uv sync --extra dev --locked
+
+      - name: Pytest
+        run: uv run --extra dev pytest -q
+
+  bandit:
+    name: ci / bandit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # pin: actions/checkout@v4.2.2
+
+      - uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a  # pin: astral-sh/setup-uv@v4.2.0
+        with:
+          enable-cache: true
+
+      - name: Sync dependencies
+        run: uv sync --extra dev --locked
+
+      - name: Bandit SAST (scripts/)
+        run: uv run --extra dev bandit -r scripts -ll -s B310
+
+  pip-audit:
+    name: ci / pip-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # pin: actions/checkout@v4.2.2
+
+      - uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a  # pin: astral-sh/setup-uv@v4.2.0
+        with:
+          enable-cache: true
+
+      - name: Sync dependencies
+        run: uv sync --extra dev --locked
+
+      - name: pip-audit (locked dev deps)
+        run: uv run --extra dev pip-audit
+
+  summarize:
+    name: ci / summarize
+    needs: [test, bandit, pip-audit]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: CI gate
+        env:
+          TEST: ${{ needs.test.result }}
+          BANDIT: ${{ needs.bandit.result }}
+          PIP_AUDIT: ${{ needs.pip-audit.result }}
+        run: |
+          echo "## CI Summary"
+          echo "| Job | Status |"
+          echo "| --- | --- |"
+          echo "| test | ${TEST} |"
+          echo "| bandit | ${BANDIT} |"
+          echo "| pip-audit | ${PIP_AUDIT} |"
+          for status in "$TEST" "$BANDIT" "$PIP_AUDIT"; do
+            if [ "$status" = "failure" ] || [ "$status" = "cancelled" ]; then
+              echo "CI gate failed."
+              exit 1
+            fi
+          done
+          echo "CI gate passed."

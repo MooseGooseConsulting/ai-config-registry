@@ -200,11 +200,18 @@ def _supabase_headers(service_key: str, *, on_conflict: str | None = None) -> di
     }
 
 
+def _assert_https_url(url: str) -> None:
+    parsed = parse.urlparse(url)
+    if parsed.scheme != "https":
+        raise ValueError(f"Refusing non-HTTPS Supabase URL: {url}")
+
+
 def _post_json(
     url: str,
     payload: list[dict] | dict,
     headers: dict[str, str],
 ) -> tuple[bool, str]:
+    _assert_https_url(url)
     data = json.dumps(payload).encode("utf-8")
     req = request.Request(url, data=data, headers=headers, method="POST")
     try:
@@ -218,6 +225,7 @@ def _post_json(
 
 
 def _get_json(url: str, headers: dict[str, str]) -> tuple[bool, Any, str]:
+    _assert_https_url(url)
     req = request.Request(url, headers=headers, method="GET")
     try:
         with request.urlopen(req, timeout=30) as response:
