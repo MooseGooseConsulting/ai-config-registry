@@ -71,4 +71,6 @@ uv run --extra dev pytest
 | Upsert `failed:http_error:409` on hooks | Run `ALTER TABLE hooks ADD CONSTRAINT ... UNIQUE (ecosystem_id, path)` or re-run bootstrap SQL |
 | `missing_env` on upsert | Ensure Doppler has `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` |
 | Empty dashboard tables | Re-run scanner first; dashboard reads scanner field names |
-| Supabase project paused | Resume in Supabase dashboard or create new project and update refs |
+| Supabase project paused | Unpause at dashboard (project `agookcvqnalxxcnhttmd` was paused 2026-06-08) or create new project and update `SUPABASE_PROJECT_REF` + Doppler keys |
+| `missing_env` on upsert | Add `SUPABASE_SERVICE_KEY` to Doppler; URL auto-derived from `SUPABASE_PROJECT_REF` when `SUPABASE_URL` absent |
+| Doppler keys missing | Run `.\scripts\doppler-push-secrets.ps1` interactively (reads manifest) |

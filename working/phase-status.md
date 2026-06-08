@@ -20,8 +20,17 @@ Bring ai-config-registry to a verified, backed-up running state: local scan, das
 - [x] Forensic audit captured in `working/FORENSIC_AUDIT.md`.
 - [x] Pytest suite in `tests/`; runbook in `docs/RUNBOOK.md`.
 - [x] `.gitignore`, `pyproject.toml`, `.env.example` added.
-- [ ] Optional: run bootstrap script against target Supabase project and verify tables (run manually when CLI linked).
+- [ ] Optional: run bootstrap script against target Supabase project and verify tables.
 - [ ] Optional: scheduled task / Cursor hook registration (manual-first, disabled by default).
+
+## Verification Results (2026-06-08)
+
+- Local sync (`.\scripts\sync-registry.ps1 -Verbose`): **pass**
+- Dashboard tables populated (390 skills, 14 MCP servers, enriched command/url with redaction): **pass**
+- Pytest (`7 passed`): **pass**
+- Doppler check: **partial** — 2/12 keys present (`CONTEXT7_API_KEY`, `SUPABASE_SERVICE_KEY`); 10 manifest keys missing
+- Supabase upsert (`-UpsertSupabase`): **blocked** — project `agookcvqnalxxcnhttmd` is **paused** (DNS NXDOMAIN; `supabase link` reports pause). Unpause at https://supabase.com/dashboard/project/agookcvqnalxxcnhttmd then re-run bootstrap + sync.
+- Git remote: **pushed** to https://github.com/Coldaine/ai-config-registry
 
 ## Salvage Decision (2026-06-08)
 
