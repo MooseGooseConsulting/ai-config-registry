@@ -51,8 +51,10 @@ FROM pg_class c
 JOIN pg_namespace n ON n.oid = c.relnamespace
 WHERE n.nspname = 'public' AND c.relname = '$table';
 "@
-            $output = & supabase db query $sql 2>&1 | Out-String
-            if ($LASTEXITCODE -ne 0) {
+            $rlsQueryOutput = & supabase db query $sql 2>&1
+            $rlsQueryExitCode = $LASTEXITCODE
+            $output = $rlsQueryOutput | Out-String
+            if ($rlsQueryExitCode -ne 0) {
                 Write-Host "[FAIL] $table - RLS query failed"
                 $allOk = $false
                 continue
@@ -70,8 +72,10 @@ SELECT
   has_table_privilege('anon', 'public.$table', 'SELECT') AS anon_select,
   has_table_privilege('authenticated', 'public.$table', 'SELECT') AS auth_select;
 "@
-            $grantOutput = & supabase db query $grantSql 2>&1 | Out-String
-            if ($LASTEXITCODE -ne 0) {
+            $grantQueryOutput = & supabase db query $grantSql 2>&1
+            $grantQueryExitCode = $LASTEXITCODE
+            $grantOutput = $grantQueryOutput | Out-String
+            if ($grantQueryExitCode -ne 0) {
                 Write-Host "[FAIL] $table - grant query failed"
                 $allOk = $false
                 continue

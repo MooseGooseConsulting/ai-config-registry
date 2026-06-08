@@ -9,6 +9,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "doppler-manifest.ps1")
 
 function Write-Step {
     param([string]$Message)
@@ -81,7 +82,11 @@ function Resolve-PowerShellExecutable {
 }
 
 function Invoke-SupabaseSecurityVerification {
-    param([string]$RepoRoot)
+    param(
+        [string]$RepoRoot,
+        [string]$DopplerProject = "codingagents",
+        [string]$DopplerConfig = "dev"
+    )
 
     $verifyScript = Join-Path $RepoRoot "scripts\verify_supabase_security.ps1"
     if (-not (Test-Path $verifyScript)) {
@@ -91,7 +96,7 @@ function Invoke-SupabaseSecurityVerification {
     Write-Step "Verifying Supabase security before upsert"
     $psExe = Resolve-PowerShellExecutable
     if (Get-Command doppler -ErrorAction SilentlyContinue) {
-        & doppler run --project codingagents --config dev -- $psExe -NoProfile -ExecutionPolicy Bypass -File $verifyScript
+        & doppler run --project $DopplerProject --config $DopplerConfig -- $psExe -NoProfile -ExecutionPolicy Bypass -File $verifyScript
     }
     else {
         & $psExe -NoProfile -ExecutionPolicy Bypass -File $verifyScript
@@ -104,6 +109,8 @@ function Invoke-SupabaseSecurityVerification {
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 Write-Verbose "Repo root resolved to $repoRoot"
+$dopplerTarget = Resolve-DopplerManifestTarget -RepoRoot $repoRoot
+Write-Verbose "Doppler target resolved to project '$($dopplerTarget.Project)' config '$($dopplerTarget.Config)'"
 
 $scannerCandidates = @(
     $ScannerScriptPath,
@@ -149,7 +156,7 @@ if (-not $NoScan) {
             Write-Warning "Unsafe override enabled: skipping .\scripts\verify_supabase_security.ps1 before Supabase upsert."
         }
         else {
-            Invoke-SupabaseSecurityVerification -RepoRoot $repoRoot
+            Invoke-SupabaseSecurityVerification -RepoRoot $repoRoot -DopplerProject $dopplerTarget.Project -DopplerConfig $dopplerTarget.Config
         }
     }
 
@@ -158,7 +165,7 @@ if (-not $NoScan) {
         if ($UpsertSupabase -and (Get-Command doppler -ErrorAction SilentlyContinue)) {
             Push-Location $repoRoot
             try {
-                & doppler run --project codingagents --config dev -- python $scannerScript @scannerArgs
+                & doppler run --project $dopplerTarget.Project --config $dopplerTarget.Config -- python $scannerScript @scannerArgs
             }
             finally {
                 Pop-Location

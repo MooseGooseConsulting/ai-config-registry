@@ -58,6 +58,15 @@ def test_sync_supabase_upsert_fails_closed_without_unsafe_override():
     assert "unsafe override" in sync_script.lower()
 
 
+def test_sync_supabase_upsert_uses_manifest_doppler_target():
+    sync_script = _repo_text("scripts/sync-registry.ps1")
+
+    assert "Resolve-DopplerManifestTarget" in sync_script
+    assert "DopplerProject" in sync_script
+    assert "DopplerConfig" in sync_script
+    assert "--project codingagents --config dev" not in sync_script
+
+
 def test_verify_supabase_security_is_strict_by_default_with_schema_only_escape_hatch():
     verify_script = _repo_text("scripts/verify_supabase_security.ps1")
 
@@ -66,6 +75,15 @@ def test_verify_supabase_security_is_strict_by_default_with_schema_only_escape_h
     assert "cannot complete strict verification" in verify_script.lower()
     assert "Supabase CLI is required" in verify_script
     assert "exit 1" in verify_script
+
+
+def test_verify_supabase_security_captures_cli_exit_codes_before_out_string():
+    verify_script = _repo_text("scripts/verify_supabase_security.ps1")
+
+    assert "$rlsQueryExitCode = $LASTEXITCODE" in verify_script
+    assert "$grantQueryExitCode = $LASTEXITCODE" in verify_script
+    assert "if ($rlsQueryExitCode -ne 0)" in verify_script
+    assert "if ($grantQueryExitCode -ne 0)" in verify_script
 
 
 def test_secret_guard_exists_and_redacts_findings(tmp_path: Path):

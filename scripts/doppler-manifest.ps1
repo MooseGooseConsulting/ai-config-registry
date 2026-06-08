@@ -24,3 +24,37 @@ function Get-ManifestSecretEntries {
     }
     return $entries
 }
+
+function Resolve-DopplerManifestTarget {
+    param(
+        [string]$RepoRoot,
+        [string]$ManifestPath,
+        [string]$DefaultProject = "codingagents",
+        [string]$DefaultConfig = "dev"
+    )
+
+    if (-not $ManifestPath) {
+        if (-not $RepoRoot) {
+            throw "RepoRoot is required when ManifestPath is not provided."
+        }
+        $ManifestPath = Join-Path $RepoRoot "working\doppler-migration-manifest.json"
+    }
+
+    $project = $DefaultProject
+    $config = $DefaultConfig
+    if (Test-Path $ManifestPath) {
+        $manifest = Get-Content -Path $ManifestPath -Raw | ConvertFrom-Json
+        if ($manifest.project) {
+            $project = [string]$manifest.project
+        }
+        if ($manifest.config) {
+            $config = [string]$manifest.config
+        }
+    }
+
+    return [pscustomobject]@{
+        Project = $project
+        Config = $config
+        ManifestPath = $ManifestPath
+    }
+}
