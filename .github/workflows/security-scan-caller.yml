@@ -6,6 +6,7 @@ name: tier1-security-scan
 
 on:
   pull_request:
+  merge_group:
   push:
     branches: [main]
 
@@ -17,6 +18,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  secret-guard:
+    name: security / secret-guard
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # pin: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run repository secret guard
+        run: python scripts/secret_guard.py --all-files
+
   gitleaks:
     name: security / gitleaks
     runs-on: ubuntu-latest
@@ -68,12 +83,13 @@ jobs:
 
   summarize:
     name: security / summarize
-    needs: [gitleaks, trufflehog, dependency-review]
+    needs: [secret-guard, gitleaks, trufflehog, dependency-review]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Security scan summary
         env:
+          SECRET_GUARD: ${{ needs.secret-guard.result }}
           GITLEAKS: ${{ needs.gitleaks.result }}
           TRUFFLEHOG: ${{ needs.trufflehog.result }}
           DEPREVIEW: ${{ needs.dependency-review.result }}
@@ -81,10 +97,11 @@ jobs:
           echo "## Tier 1 Security Scan"
           echo "| Scanner | Status |"
           echo "| --- | --- |"
+          echo "| secret-guard | ${SECRET_GUARD} |"
           echo "| gitleaks | ${GITLEAKS} |"
           echo "| trufflehog | ${TRUFFLEHOG} |"
           echo "| dependency-review | ${DEPREVIEW:-skipped} |"
-          for status in "$GITLEAKS" "$TRUFFLEHOG"; do
+          for status in "$SECRET_GUARD" "$GITLEAKS" "$TRUFFLEHOG"; do
             if [ "$status" = "failure" ] || [ "$status" = "cancelled" ]; then
               exit 1
             fi

@@ -3,11 +3,13 @@ param(
     [switch]$NoScan,
     [switch]$NoDashboard,
     [switch]$UpsertSupabase,
+    [switch]$AllowUnsafeSupabaseUpsert,
     [string]$ScannerScriptPath,
     [string]$DashboardScriptPath
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "doppler-manifest.ps1")
 
 function Write-Step {
     param([string]$Message)
@@ -67,8 +69,48 @@ function Invoke-PythonScript {
     & python $ScriptPath @ExtraArgs
 }
 
+function Resolve-PowerShellExecutable {
+    $pwsh = Get-Command pwsh -ErrorAction SilentlyContinue
+    if ($pwsh) {
+        return $pwsh.Source
+    }
+    $powershell = Get-Command powershell -ErrorAction SilentlyContinue
+    if ($powershell) {
+        return $powershell.Source
+    }
+    throw "No PowerShell executable found for Supabase security verification."
+}
+
+function Invoke-SupabaseSecurityVerification {
+    param(
+        [string]$RepoRoot,
+        [string]$DopplerProject = "codingagents",
+        [string]$DopplerConfig = "dev"
+    )
+
+    $verifyScript = Join-Path $RepoRoot "scripts\verify_supabase_security.ps1"
+    if (-not (Test-Path $verifyScript)) {
+        throw "Supabase security verifier missing: $verifyScript"
+    }
+
+    Write-Step "Verifying Supabase security before upsert"
+    $psExe = Resolve-PowerShellExecutable
+    if (Get-Command doppler -ErrorAction SilentlyContinue) {
+        & doppler run --project $DopplerProject --config $DopplerConfig -- $psExe -NoProfile -ExecutionPolicy Bypass -File $verifyScript
+    }
+    else {
+        & $psExe -NoProfile -ExecutionPolicy Bypass -File $verifyScript
+    }
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Supabase security verification failed; refusing -UpsertSupabase."
+    }
+}
+
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 Write-Verbose "Repo root resolved to $repoRoot"
+$dopplerTarget = Resolve-DopplerManifestTarget -RepoRoot $repoRoot
+Write-Verbose "Doppler target resolved to project '$($dopplerTarget.Project)' config '$($dopplerTarget.Config)'"
 
 $scannerCandidates = @(
     $ScannerScriptPath,
@@ -105,19 +147,25 @@ if ($NoScan -and $NoDashboard) {
 $upsertStatus = $null
 
 if (-not $NoScan) {
-    Write-Step "Running scanner script: $scannerScript"
+    Write-Step "Preparing scanner script: $scannerScript"
     $scannerArgs = @()
     if ($UpsertSupabase) {
         $scannerArgs += "--upsert-supabase"
         Write-Step "Supabase upsert requested via -UpsertSupabase"
-        Write-Host "Security: run .\scripts\verify_supabase_security.ps1 before first upsert (see docs/SECURITY.md)"
+        if ($AllowUnsafeSupabaseUpsert) {
+            Write-Warning "Unsafe override enabled: skipping .\scripts\verify_supabase_security.ps1 before Supabase upsert."
+        }
+        else {
+            Invoke-SupabaseSecurityVerification -RepoRoot $repoRoot -DopplerProject $dopplerTarget.Project -DopplerConfig $dopplerTarget.Config
+        }
     }
 
+    Write-Step "Running scanner script: $scannerScript"
     if ([IO.Path]::GetExtension($scannerScript) -eq ".py") {
         if ($UpsertSupabase -and (Get-Command doppler -ErrorAction SilentlyContinue)) {
             Push-Location $repoRoot
             try {
-                & doppler run --project codingagents --config dev -- python $scannerScript @scannerArgs
+                & doppler run --project $dopplerTarget.Project --config $dopplerTarget.Config -- python $scannerScript @scannerArgs
             }
             finally {
                 Pop-Location

@@ -9,7 +9,7 @@ def test_secrets_manifest_strips_locations_by_default():
             "secret_name": "MORPH_API_KEY",
             "doppler_project": "codingagents",
             "doppler_config": "dev",
-            "locations": ["C:/Users/test/.cursor/mcp.json"],
+            "locations": ["/home/example/.cursor/mcp.json"],
         }
     ]
     result = sanitize_secrets_manifest_for_remote(manifest, include_secret_locations=False)
@@ -23,8 +23,8 @@ def test_secrets_manifest_includes_locations_when_opted_in():
             "secret_name": "MORPH_API_KEY",
             "doppler_project": "codingagents",
             "doppler_config": "dev",
-            "locations": ["C:/Users/test/.cursor/mcp.json"],
+            "locations": ["/home/example/.cursor/mcp.json"],
         }
     ]
     result = sanitize_secrets_manifest_for_remote(manifest, include_secret_locations=True)
-    assert result[0]["locations"] == ["C:/Users/test/.cursor/mcp.json"]
+    assert result[0]["locations"] == ["/home/example/.cursor/mcp.json"]

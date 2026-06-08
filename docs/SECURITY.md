@@ -14,6 +14,8 @@ This project originally shipped only `sql/001_registry_schema.sql` with **no RLS
 2. Run `scripts/verify_supabase_security.ps1` — must pass before `-UpsertSupabase`
 3. Never put `SUPABASE_SERVICE_KEY` or `anon` keys in the repo, dashboard HTML, or git
 
+`verify_supabase_security.ps1` is strict by default: it checks schema-level RLS/grant state when the Supabase CLI is available and requires a live anon-denial test with `SUPABASE_ANON_KEY`. Use `-SchemaOnly` only when you intentionally want a partial check. `sync-registry.ps1 -UpsertSupabase` runs the verifier first and fails closed unless `-AllowUnsafeSupabaseUpsert` is explicitly passed.
+
 ## What gets uploaded to Supabase
 
 | Data | Uploaded? | Risk |
@@ -41,8 +43,9 @@ Upsert uses `sanitize_for_remote()` in `registry_scanner.py`:
 **Do not:**
 
 - Store Doppler **values** in Supabase (this project doesn't)
-- Commit `working/doppler-migration-manifest.json` paths with real usernames to a **public** repo (consider making the GitHub repo private)
+- Reintroduce concrete workstation paths into `working/doppler-migration-manifest.json`; manifest v2 uses public-safe `source_refs`
 - Run `doppler-push-secrets.ps1` in CI logs
+- Pass secret values as `KEY=value` command arguments; the push script sends values to Doppler over stdin with `--silent`
 
 **Partial Doppler state (2/12 keys)** does not break security — it means upsert may skip for missing `SUPABASE_SERVICE_KEY`. It does mean other tools won't get secrets from Doppler until you push them.
 
@@ -64,7 +67,8 @@ Upsert uses `sanitize_for_remote()` in `registry_scanner.py`:
 # 1. Bootstrap schema + RLS (after unpausing Supabase project)
 .\scripts\bootstrap_supabase.ps1
 
-# 2. Verify RLS and deny anon access
+# 2. Verify RLS, revoked grants, and deny anon access
+# Requires SUPABASE_ANON_KEY for full strict mode.
 .\scripts\verify_supabase_security.ps1
 
 # 3. Local scan only (safest default)
@@ -73,6 +77,18 @@ Upsert uses `sanitize_for_remote()` in `registry_scanner.py`:
 # 4. Remote sync only when RLS verified
 .\scripts\sync-registry.ps1 -UpsertSupabase -Verbose
 ```
+
+## Repo Secret Guard
+
+This repo owns an additional local/CI guard for generic patterns that provider scanners can miss:
+
+```powershell
+python scripts/secret_guard.py --all-files
+python scripts/secret_guard.py --staged
+.\scripts\install-git-hooks.ps1
+```
+
+The guard redacts findings before printing. GitHub secret scanning and push protection should remain enabled in repository settings. As of the 2026-06-08 security audit, generic/non-provider detection in GitHub settings was not enabled, so the repo-owned guard is the generic-pattern fallback.
 
 ## What the original plan missed
 
@@ -99,7 +115,7 @@ All changes must pass PR checks before merging to `main`:
 | `semgrep-secrets` | Semgrep `p/secrets` + `p/python` | `semgrep-secrets / semgrep-secrets` |
 | `osv-scanner` | OSV DB on `uv.lock` | `osv-scanner / scan` |
 
-Tier 1 scanners are **inlined** from `coldaine-ci` (that repo is private, so `workflow_call` cannot be used from this public repo).
+Tier 1 scanners are **inlined** from `coldaine-ci` (that repo is private, so `workflow_call` cannot be used from this public repo). `tier1-security-scan` also runs `python scripts/secret_guard.py --all-files`, and `security / summarize` includes the result.
 
 Dependabot opens weekly PRs for pip and GitHub Actions (human review required — never auto-merge Action SHA updates).
 

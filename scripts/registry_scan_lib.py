@@ -106,26 +106,6 @@ EXTRA_SURFACES: dict[str, list[Path]] = {
         HOME / "Documents" / "WindowsPowerShell" / "Microsoft.PowerShell_profile.ps1",
         HOME / ".bashrc",
         HOME / ".zshrc",
-        HOME
-        / "AppData"
-        / "Local"
-        / "Packages"
-        / "CanonicalGroupLimited.UbuntuonWindows_79rhkp1fndgsc"
-        / "LocalState"
-        / "rootfs"
-        / "home"
-        / "pmacl"
-        / ".bashrc",
-        HOME
-        / "AppData"
-        / "Local"
-        / "Packages"
-        / "CanonicalGroupLimited.UbuntuonWindows_79rhkp1fndgsc"
-        / "LocalState"
-        / "rootfs"
-        / "home"
-        / "pmacl"
-        / ".zshrc",
     ],
     "transcript_and_cache_metadata": [
         HOME / ".cursor" / "projects",
@@ -150,6 +130,24 @@ KNOWN_SECRET_KEYS = [
     "PLAID_CLIENT_ID",
     "PLAID_SECRET",
 ]
+
+
+def discover_wsl_profile_paths(home: Path = HOME) -> list[Path]:
+    packages_root = home / "AppData" / "Local" / "Packages"
+    discovered: list[Path] = []
+    if not packages_root.exists():
+        return discovered
+
+    for rootfs_home in sorted(packages_root.glob("*/*/rootfs/home")):
+        if not rootfs_home.is_dir():
+            continue
+        for wsl_user_home in sorted(rootfs_home.iterdir()):
+            if not wsl_user_home.is_dir():
+                continue
+            for profile_name in (".bashrc", ".zshrc"):
+                discovered.append(wsl_user_home / profile_name)
+    return discovered
+
 
 _PLAINTEXT_SECRET_PATTERNS = [
     re.compile(r'"[A-Za-z0-9_]*(?:KEY|TOKEN|SECRET|PASSWORD)"\s*:\s*"(?!\$\{)[^"]{8,}"'),
@@ -471,7 +469,13 @@ def _surface_kind(path: Path) -> str:
 
 def enumerate_extra_surfaces() -> dict[str, Any]:
     result: dict[str, Any] = {}
-    for name, paths in EXTRA_SURFACES.items():
+    surface_paths = {
+        name: list(paths)
+        for name, paths in EXTRA_SURFACES.items()
+    }
+    surface_paths["shell_profiles"].extend(discover_wsl_profile_paths(HOME))
+
+    for name, paths in surface_paths.items():
         entries: list[dict[str, Any]] = []
         for path in paths:
             entries.append(

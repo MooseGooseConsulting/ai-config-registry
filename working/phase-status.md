@@ -2,39 +2,32 @@
 
 ## Objective
 
-Bring ai-config-registry to a verified, backed-up running state: local scan, dashboard, Supabase upsert, Doppler validation, git remote.
+Bring ai-config-registry to a verified, backed-up running state: local scan, dashboard, Supabase upsert, Doppler validation, git remote, and secret-safe public metadata.
 
-## Complete Criteria
+## Status Matrix (2026-06-08)
 
-- [x] Repository scaffold exists (`scripts/`, `working/`, `sql/`, `tests/`, `docs/`).
-- [x] README defines project purpose, setup, and RUNBOOK link.
-- [x] Baseline SQL schema exists for all 6 registry tables (hooks unique constraint added).
-- [x] `scripts/bootstrap_supabase.ps1` executes `supabase db query --file` when CLI present.
-- [x] `scripts/verify_supabase.ps1` queries table row counts.
-- [x] `scripts/sync-registry.ps1` supports `-UpsertSupabase` with per-table status output.
-- [x] Scanner uses portable `Path.home()` / `USERPROFILE` paths.
-- [x] Dashboard aligned to scanner field names; renders ecosystems, MCP sources, extra surfaces.
-- [x] MCP rows enriched with command/url, ecosystem sources, plaintext-secret flag.
-- [x] Supabase upsert uses `on_conflict` headers and two-phase ecosystem ID mapping.
-- [x] `doppler-push-secrets.ps1` reads `working/doppler-migration-manifest.json`.
-- [x] Forensic audit captured in `working/FORENSIC_AUDIT.md`.
-- [x] Pytest suite in `tests/`; runbook in `docs/RUNBOOK.md`.
-- [x] `.gitignore`, `pyproject.toml`, `.env.example` added.
-- [ ] Optional: run bootstrap script against target Supabase project and verify tables.
-- [ ] Optional: scheduled task / Cursor hook registration (manual-first, disabled by default).
+| Capability | Implemented | Locally verified | Live verified | Blocked | Evidence |
+|------------|-------------|------------------|---------------|---------|----------|
+| Repository scaffold, README, runbook, tests | yes | yes | n/a | no | `uv run --extra dev pytest -q` -> 26 passed |
+| Local scanner and dashboard sync | yes | yes | n/a | no | `.\scripts\sync-registry.ps1 -Verbose` -> scanner/dashboard complete, Supabase disabled |
+| Manifest v2 public-safe metadata | yes | yes | n/a | no | `working/doppler-migration-manifest.json` uses `source_refs` and `source_catalog`; no concrete profile paths |
+| Doppler push workflow | yes | yes | partial | partial | `.\scripts\doppler-push-secrets.ps1 -DryRun` parsed 12 keys; live mutation not run |
+| Doppler state check | yes | yes | partial | partial | `.\scripts\check-doppler-state.ps1` authenticated; required `SUPABASE_SERVICE_KEY` present; 10 verification keys missing |
+| Repo secret guard | yes | yes | n/a | no | `python scripts/secret_guard.py --all-files` -> Secret guard passed |
+| Git hooks installer | yes | yes | local only | no | `.\scripts\install-git-hooks.ps1` set `core.hooksPath=.githooks` |
+| CI required-check materialization | yes | not locally executable | pending PR | pending | Required workflows now include `merge_group`; OSV no longer path-filtered |
+| Supabase RLS SQL | yes | static only | no | yes | `sql/002_row_level_security.sql` idempotent; live verifier blocked |
+| Supabase strict verifier | yes | yes | no | yes | `.\scripts\verify_supabase_security.ps1` failed RLS queries while live project state is not verified |
+| Supabase upsert | yes | fail-closed verified | no | yes | `.\scripts\sync-registry.ps1 -UpsertSupabase -Verbose` refused upsert before scanner write path |
 
-## Verification Results (2026-06-08)
+## Current Verification Results
 
-- Local sync (`.\scripts\sync-registry.ps1 -Verbose`): **pass**
-- Dashboard tables populated (390 skills, 14 MCP servers, enriched command/url with redaction): **pass**
-- Pytest (`7 passed`): **pass**
-- Doppler check: **partial** — 2/12 keys present (`CONTEXT7_API_KEY`, `SUPABASE_SERVICE_KEY`); 10 manifest keys missing
-- Supabase upsert (`-UpsertSupabase`): **blocked** — project `agookcvqnalxxcnhttmd` is **paused** (DNS NXDOMAIN; `supabase link` reports pause). Unpause at https://supabase.com/dashboard/project/agookcvqnalxxcnhttmd then re-run bootstrap + sync.
-- Git remote: **pushed** to https://github.com/Coldaine/ai-config-registry
-
-## Salvage Decision (2026-06-08)
-
-**Proceed with full-stack revival.** Forensic audit confirmed scanner produces real output; dashboard/upsert/git were broken but fixable. coldaine-infra-fresh does not supersede local AI config inventory.
+- Local tests: **pass** (`26 passed`).
+- Local sync: **pass**; generated artifacts remain gitignored.
+- Secret guard: **pass** on tracked files.
+- Doppler: **partial**; `SUPABASE_SERVICE_KEY` is present, 10 verification keys are missing.
+- Supabase: **blocked**; strict verifier cannot prove RLS/grants/anon denial yet.
+- Full-stack complete: **false** until Supabase is active, bootstrap/RLS/anon verification passes, Doppler is complete enough for the target workflow, and one `-UpsertSupabase` run exits 0.
 
 ## Notes
 

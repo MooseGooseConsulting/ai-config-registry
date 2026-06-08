@@ -4,15 +4,9 @@ name: osv-scanner
 
 on:
   pull_request:
-    paths:
-      - 'uv.lock'
-      - 'pyproject.toml'
-      - '.github/workflows/osv-scanner.yml'
+  merge_group:
   push:
     branches: [main]
-    paths:
-      - 'uv.lock'
-      - 'pyproject.toml'
   schedule:
     - cron: '0 9 * * 1'
   workflow_dispatch:
