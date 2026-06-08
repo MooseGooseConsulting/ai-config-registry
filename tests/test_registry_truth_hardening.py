@@ -209,10 +209,16 @@ def test_tier1_security_scan_runs_secret_guard_and_summarizes_it():
 def test_workflows_do_not_keep_stale_checkout_pin():
     workflow_dir = REPO_ROOT / ".github" / "workflows"
     workflow_paths = sorted([*workflow_dir.glob("*.yml"), *workflow_dir.glob("*.yaml")])
-    workflows = "\n".join(path.read_text(encoding="utf-8") for path in workflow_paths)
+    stale_checkout_uses = {
+        "actions/checkout@v4.2.2",
+        "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+    }
 
-    assert "actions/checkout@v4.2.2" not in workflows
-    assert "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683" not in workflows
+    for workflow_path in workflow_paths:
+        workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+        for job in workflow.get("jobs", {}).values():
+            for step in job.get("steps", []):
+                assert step.get("uses") not in stale_checkout_uses
 
 
 def test_dependabot_groups_github_action_updates():
