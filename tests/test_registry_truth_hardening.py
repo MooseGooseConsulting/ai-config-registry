@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -203,6 +204,39 @@ def test_tier1_security_scan_runs_secret_guard_and_summarizes_it():
     assert "python scripts/secret_guard.py --all-files" in workflow
     assert "persist-credentials: false" in workflow
     assert "SECRET_GUARD" in workflow
+
+
+def test_workflows_do_not_keep_stale_checkout_pin():
+    workflow_dir = REPO_ROOT / ".github" / "workflows"
+    workflow_paths = sorted([*workflow_dir.glob("*.yml"), *workflow_dir.glob("*.yaml")])
+    stale_checkout_uses = {
+        "actions/checkout@v4.2.2",
+        "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+    }
+
+    for workflow_path in workflow_paths:
+        workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+        for job in workflow.get("jobs", {}).values():
+            for step in job.get("steps", []):
+                assert step.get("uses") not in stale_checkout_uses
+
+
+def test_dependabot_groups_github_action_updates():
+    config = yaml.safe_load(_repo_text(".github/dependabot.yml"))
+    github_actions_updates = [
+        update
+        for update in config["updates"]
+        if update.get("package-ecosystem") == "github-actions"
+    ]
+
+    assert len(github_actions_updates) == 1
+    assert (
+        github_actions_updates[0]
+        .get("groups", {})
+        .get("github-actions", {})
+        .get("patterns")
+        == ["*"]
+    )
 
 
 def test_pre_push_hook_uses_target_remote_for_new_branch_base():
