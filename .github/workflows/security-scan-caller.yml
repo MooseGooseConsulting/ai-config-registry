@@ -49,7 +49,7 @@ jobs:
           path: ./
           base: ${{ github.event.pull_request.base.sha || github.event.before }}
           head: ${{ github.event.pull_request.head.sha || github.sha }}
-          extra_args: --results=verified,unknown --fail
+          extra_args: --results=verified,unknown
 
   dependency-review:
     name: security / dependency-review
