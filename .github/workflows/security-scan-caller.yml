@@ -1,0 +1,30 @@
+# Tier 1 secret + dependency scanning via coldaine-ci reusable workflow.
+# Merge gate: security / summarize (configure in branch protection).
+#
+# Scanners: gitleaks, TruffleHog (verified+unknown), dependency-review (PRs).
+
+name: tier1-security-scan
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: read
+  actions: read
+
+concurrency:
+  group: tier1-security-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security:
+    uses: coldaine/coldaine-ci/.github/workflows/security-scan.yml@e2c8645d92b1490e29cac58c65663162fd6dccee
+    with:
+      fail-on-finding: true
+      enable-gitleaks: true
+      enable-trufflehog: true
+      enable-dependency-review: true

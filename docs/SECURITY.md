@@ -88,7 +88,22 @@ It did **not** address:
 - Branch protection on `main` (configured separately)
 - Post-fix security verification doc (this file)
 
+## GitHub CI gates (required before merge)
+
+All changes must pass PR checks before merging to `main`:
+
+| Workflow | Scanners | Merge gate check |
+|----------|----------|------------------|
+| `tier1-security-scan` | gitleaks, TruffleHog, dependency-review | `security / summarize` |
+| `ci` | pytest, Bandit SAST, pip-audit | `ci / summarize` |
+| `semgrep-secrets` | Semgrep `p/secrets` + `p/python` | `semgrep-secrets / semgrep-secrets` |
+| `osv-scanner` | OSV DB on `uv.lock` | `osv-scanner / scan` |
+
+Sourced from your **coldaine-ci** Tier 1 reusable workflow (`coldaine/coldaine-ci@e2c8645d…`) plus Python-specific SAST/dep audits.
+
+Dependabot opens weekly PRs for pip and GitHub Actions (human review required — never auto-merge Action SHA updates).
+
 ## GitHub
 
-- `main` branch protection requires pull requests (no direct pushes)
+- `main` branch protection requires pull requests **and** the CI gates above
 - Prefer **private** repo for a personal machine inventory tool

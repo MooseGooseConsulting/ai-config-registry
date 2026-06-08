@@ -1,5 +1,13 @@
 {
-  "required_status_checks": null,
+  "required_status_checks": {
+    "strict": true,
+    "checks": [
+      { "context": "security / summarize", "app_id": null },
+      { "context": "ci / summarize", "app_id": null },
+      { "context": "semgrep-secrets / semgrep-secrets", "app_id": null },
+      { "context": "osv-scanner / scan", "app_id": null }
+    ]
+  },
   "enforce_admins": true,
   "required_pull_request_reviews": {
     "required_approving_review_count": 0,
