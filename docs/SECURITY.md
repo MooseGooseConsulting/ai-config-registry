@@ -99,7 +99,7 @@ All changes must pass PR checks before merging to `main`:
 | `semgrep-secrets` | Semgrep `p/secrets` + `p/python` | `semgrep-secrets / semgrep-secrets` |
 | `osv-scanner` | OSV DB on `uv.lock` | `osv-scanner / scan` |
 
-Sourced from your **coldaine-ci** Tier 1 reusable workflow (`coldaine/coldaine-ci@e2c8645d…`) plus Python-specific SAST/dep audits.
+Tier 1 scanners are **inlined** from `coldaine-ci` (that repo is private, so `workflow_call` cannot be used from this public repo).
 
 Dependabot opens weekly PRs for pip and GitHub Actions (human review required — never auto-merge Action SHA updates).
 

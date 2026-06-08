@@ -5,7 +5,7 @@
       { "context": "security / summarize", "app_id": null },
       { "context": "ci / summarize", "app_id": null },
       { "context": "semgrep-secrets / semgrep-secrets", "app_id": null },
-      { "context": "osv-scanner / scan", "app_id": null }
+      { "context": "osv-scanner / scan / osv-scan", "app_id": null }
     ]
   },
   "enforce_admins": true,

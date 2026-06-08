@@ -1,7 +1,6 @@
-# Tier 1 secret + dependency scanning via coldaine-ci reusable workflow.
-# Merge gate: security / summarize (configure in branch protection).
-#
-# Scanners: gitleaks, TruffleHog (verified+unknown), dependency-review (PRs).
+# Tier 1 secret + dependency scanning (inlined from coldaine-ci tier1/security-scan.yml).
+# coldaine-ci is private; reusable workflow_call is unavailable to this public repo.
+# Merge gate: security / summarize
 
 name: tier1-security-scan
 
@@ -12,19 +11,86 @@ on:
 
 permissions:
   contents: read
-  security-events: write
-  pull-requests: read
-  actions: read
 
 concurrency:
   group: tier1-security-scan-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  security:
-    uses: coldaine/coldaine-ci/.github/workflows/security-scan.yml@e2c8645d92b1490e29cac58c65663162fd6dccee
-    with:
-      fail-on-finding: true
-      enable-gitleaks: true
-      enable-trufflehog: true
-      enable-dependency-review: true
+  gitleaks:
+    name: security / gitleaks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # pin: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7  # pin: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  trufflehog:
+    name: security / trufflehog
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # pin: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Run TruffleHog (verified + unknown, fail on finding)
+        uses: trufflesecurity/trufflehog@35943b41905eb1195f021955da17c233ed555e24  # pin: trufflesecurity/trufflehog@v3.84.2
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.base.sha || github.event.before }}
+          head: ${{ github.event.pull_request.head.sha || github.sha }}
+          extra_args: --results=verified,unknown --fail
+
+  dependency-review:
+    name: security / dependency-review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # pin: actions/checkout@v4.2.2
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@3b139cfc5fae8b618d3eae3675e383bb1769c019  # pin: actions/dependency-review-action@v4.5.0
+        with:
+          fail-on-severity: high
+
+  summarize:
+    name: security / summarize
+    needs: [gitleaks, trufflehog, dependency-review]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Security scan summary
+        env:
+          GITLEAKS: ${{ needs.gitleaks.result }}
+          TRUFFLEHOG: ${{ needs.trufflehog.result }}
+          DEPREVIEW: ${{ needs.dependency-review.result }}
+        run: |
+          echo "## Tier 1 Security Scan"
+          echo "| Scanner | Status |"
+          echo "| --- | --- |"
+          echo "| gitleaks | ${GITLEAKS} |"
+          echo "| trufflehog | ${TRUFFLEHOG} |"
+          echo "| dependency-review | ${DEPREVIEW:-skipped} |"
+          for status in "$GITLEAKS" "$TRUFFLEHOG"; do
+            if [ "$status" = "failure" ] || [ "$status" = "cancelled" ]; then
+              exit 1
+            fi
+          done
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            if [ "$DEPREVIEW" = "failure" ] || [ "$DEPREVIEW" = "cancelled" ]; then
+              exit 1
+            fi
+          fi

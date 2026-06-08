@@ -27,15 +27,14 @@ jobs:
           fetch-depth: 0
 
       - name: Semgrep p/secrets
-        env:
-          SEMGREP_RULES: p/secrets
         run: |
-          semgrep ci \
+          semgrep scan \
             --config p/secrets \
             --sarif --output semgrep.sarif \
-            --error
+            --error \
+            .
 
-      - name: Semgrep p/python (security-audit)
+      - name: Semgrep p/python
         run: |
           semgrep scan \
             --config p/python \
