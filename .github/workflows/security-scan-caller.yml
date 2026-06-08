@@ -59,7 +59,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run TruffleHog (verified + unknown, fail on finding)
-        uses: trufflesecurity/trufflehog@35943b41905eb1195f021955da17c233ed555e24  # pin: trufflesecurity/trufflehog@v3.84.2
+        uses: trufflesecurity/trufflehog@d411fff7b8879a62509f3fa98c07f247ac089a51  # pin: trufflesecurity/trufflehog@v3.95.5
         with:
           path: ./
           base: ${{ github.event.pull_request.base.sha || github.event.before }}
