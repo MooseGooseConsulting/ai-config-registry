@@ -205,6 +205,23 @@ def test_tier1_security_scan_runs_secret_guard_and_summarizes_it():
     assert "SECRET_GUARD" in workflow
 
 
+def test_workflows_do_not_keep_stale_checkout_pin():
+    workflows = "\n".join(path.read_text(encoding="utf-8") for path in (REPO_ROOT / ".github" / "workflows").glob("*.yml"))
+
+    assert "actions/checkout@v4.2.2" not in workflows
+    assert "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683" not in workflows
+
+
+def test_dependabot_groups_github_action_updates():
+    config = _repo_text(".github/dependabot.yml")
+
+    assert "package-ecosystem: github-actions" in config
+    assert "groups:" in config
+    assert "github-actions:" in config
+    assert "patterns:" in config
+    assert '"*"' in config
+
+
 def test_pre_push_hook_uses_target_remote_for_new_branch_base():
     hook = _repo_text(".githooks/pre-push")
 
