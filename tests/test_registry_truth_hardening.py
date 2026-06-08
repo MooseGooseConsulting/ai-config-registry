@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -206,20 +207,30 @@ def test_tier1_security_scan_runs_secret_guard_and_summarizes_it():
 
 
 def test_workflows_do_not_keep_stale_checkout_pin():
-    workflows = "\n".join(path.read_text(encoding="utf-8") for path in (REPO_ROOT / ".github" / "workflows").glob("*.yml"))
+    workflow_dir = REPO_ROOT / ".github" / "workflows"
+    workflow_paths = sorted([*workflow_dir.glob("*.yml"), *workflow_dir.glob("*.yaml")])
+    workflows = "\n".join(path.read_text(encoding="utf-8") for path in workflow_paths)
 
     assert "actions/checkout@v4.2.2" not in workflows
     assert "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683" not in workflows
 
 
 def test_dependabot_groups_github_action_updates():
-    config = _repo_text(".github/dependabot.yml")
+    config = yaml.safe_load(_repo_text(".github/dependabot.yml"))
+    github_actions_updates = [
+        update
+        for update in config["updates"]
+        if update.get("package-ecosystem") == "github-actions"
+    ]
 
-    assert "package-ecosystem: github-actions" in config
-    assert "groups:" in config
-    assert "github-actions:" in config
-    assert "patterns:" in config
-    assert '"*"' in config
+    assert len(github_actions_updates) == 1
+    assert (
+        github_actions_updates[0]
+        .get("groups", {})
+        .get("github-actions", {})
+        .get("patterns")
+        == ["*"]
+    )
 
 
 def test_pre_push_hook_uses_target_remote_for_new_branch_base():
