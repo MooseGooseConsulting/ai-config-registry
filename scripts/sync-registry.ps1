@@ -110,6 +110,7 @@ if (-not $NoScan) {
     if ($UpsertSupabase) {
         $scannerArgs += "--upsert-supabase"
         Write-Step "Supabase upsert requested via -UpsertSupabase"
+        Write-Host "Security: run .\scripts\verify_supabase_security.ps1 before first upsert (see docs/SECURITY.md)"
     }
 
     if ([IO.Path]::GetExtension($scannerScript) -eq ".py") {

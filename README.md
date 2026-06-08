@@ -14,6 +14,19 @@ This repository stores registry metadata and automation for AI tooling configura
 - Do not commit plaintext service secrets.
 - Use environment variables (for example `SUPABASE_SERVICE_KEY`) for runtime authentication.
 
+## Security
+
+**Read [docs/SECURITY.md](docs/SECURITY.md) before enabling Supabase upsert.**
+
+Supabase `public` tables without Row Level Security can be exposed via the `anon` API key. This repo ships `sql/002_row_level_security.sql` to deny anon/authenticated access. Apply it with bootstrap, then verify:
+
+```powershell
+.\scripts\bootstrap_supabase.ps1
+.\scripts\verify_supabase_security.ps1
+```
+
+Secret **values** are never uploaded. Secret file **paths** are stripped from upserts unless you pass `--include-secret-locations` (not recommended).
+
 ## Setup
 
 ### Prerequisites
@@ -42,6 +55,7 @@ Target project ref: `agookcvqnalxxcnhttmd`
 
 ```powershell
 .\scripts\bootstrap_supabase.ps1
+.\scripts\verify_supabase_security.ps1
 .\scripts\verify_supabase.ps1
 ```
 

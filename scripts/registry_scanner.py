@@ -251,7 +251,27 @@ def _fetch_ecosystem_id_map(base_url: str, service_key: str) -> tuple[bool, dict
     return True, mapping, "ok"
 
 
-def remap_ecosystem_ids(snapshot: dict, name_to_db_id: dict[str, int]) -> dict[str, list[dict]]:
+def sanitize_secrets_manifest_for_remote(
+    manifest: list[dict], *, include_secret_locations: bool
+) -> list[dict]:
+    sanitized: list[dict] = []
+    for entry in manifest:
+        row = {
+            "secret_name": entry.get("secret_name"),
+            "doppler_project": entry.get("doppler_project", "codingagents"),
+            "doppler_config": entry.get("doppler_config", "dev"),
+            "locations": entry.get("locations", []) if include_secret_locations else [],
+        }
+        sanitized.append(row)
+    return sanitized
+
+
+def remap_ecosystem_ids(
+    snapshot: dict,
+    name_to_db_id: dict[str, int],
+    *,
+    include_secret_locations: bool = False,
+) -> dict[str, list[dict]]:
     local_to_name = snapshot.get("ecosystem_name_by_local_id") or {
         eco["id"]: eco["name"] for eco in snapshot["ecosystems"]
     }
@@ -307,7 +327,10 @@ def remap_ecosystem_ids(snapshot: dict, name_to_db_id: dict[str, int]) -> dict[s
             }
         )
 
-    secrets_manifest = snapshot["secrets_manifest"]
+    secrets_manifest = sanitize_secrets_manifest_for_remote(
+        snapshot["secrets_manifest"],
+        include_secret_locations=include_secret_locations,
+    )
     cli_rows = [
         {
             "name": tool["name"],
@@ -327,7 +350,7 @@ def remap_ecosystem_ids(snapshot: dict, name_to_db_id: dict[str, int]) -> dict[s
     }
 
 
-def maybe_supabase_upsert(snapshot: dict) -> dict[str, str]:
+def maybe_supabase_upsert(snapshot: dict, *, include_secret_locations: bool = False) -> dict[str, str]:
     supabase_url = resolve_supabase_url()
     service_key = os.getenv("SUPABASE_SERVICE_KEY")
     if not supabase_url or not service_key:
@@ -350,7 +373,11 @@ def maybe_supabase_upsert(snapshot: dict) -> dict[str, str]:
         result["status"] = "failed"
         return result
 
-    rows = remap_ecosystem_ids(snapshot, name_to_db_id)
+    rows = remap_ecosystem_ids(
+        snapshot,
+        name_to_db_id,
+        include_secret_locations=include_secret_locations,
+    )
     table_specs = [
         ("skills", "path"),
         ("mcp_servers", "name,command_or_url"),
@@ -386,6 +413,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Attempt Supabase upsert when SUPABASE_URL and SUPABASE_SERVICE_KEY are present.",
     )
+    parser.add_argument(
+        "--include-secret-locations",
+        action="store_true",
+        help="Upload file paths in secrets_manifest to Supabase (off by default; see docs/SECURITY.md).",
+    )
     return parser.parse_args()
 
 
@@ -394,7 +426,10 @@ def main() -> int:
 
     snapshot = build_snapshot()
     if args.upsert_supabase:
-        snapshot["supabase_upsert"] = maybe_supabase_upsert(snapshot)
+        snapshot["supabase_upsert"] = maybe_supabase_upsert(
+            snapshot,
+            include_secret_locations=args.include_secret_locations,
+        )
     else:
         snapshot["supabase_upsert"] = {"status": "disabled"}
 

@@ -27,8 +27,11 @@ Open `working/registry-dashboard.html` and confirm populated Skills, MCP, Hooks,
 
 ## 3. Supabase bootstrap (first time)
 
+Read `docs/SECURITY.md` first. Bootstrap applies schema **and** RLS lockdown.
+
 ```powershell
 .\scripts\bootstrap_supabase.ps1
+.\scripts\verify_supabase_security.ps1
 .\scripts\verify_supabase.ps1
 ```
 
