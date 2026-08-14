@@ -221,22 +221,33 @@ def test_workflows_do_not_keep_stale_checkout_pin():
                 assert step.get("uses") not in stale_checkout_uses
 
 
-def test_dependabot_groups_github_action_updates():
-    config = yaml.safe_load(_repo_text(".github/dependabot.yml"))
-    github_actions_updates = [
-        update
-        for update in config["updates"]
-        if update.get("package-ecosystem") == "github-actions"
-    ]
+def test_github_action_updates_are_grouped_by_renovate():
+    """Org doctrine: Renovate owns version updates, Dependabot is alerts-only.
 
-    assert len(github_actions_updates) == 1
-    assert (
-        github_actions_updates[0]
-        .get("groups", {})
-        .get("github-actions", {})
-        .get("patterns")
-        == ["*"]
-    )
+    This replaces the former Dependabot assertion. The intent is unchanged --
+    github-actions bumps must arrive grouped, not one PR per action -- but the
+    grouping now lives in the shared preset
+    (MooseGooseConsulting/renovate-config, "github actions" packageRule)
+    rather than in a per-repo dependabot.yml.
+    """
+    config = json.loads(_repo_text("renovate.json"))
+
+    assert "github>MooseGooseConsulting/renovate-config" in config["extends"]
+
+
+def test_dependabot_version_updates_are_retired():
+    """Dual version-update configs are forbidden: Renovate and Dependabot both
+    opening PRs for the same upgrade is the exact duplication this repo's
+    standardization removed. Security updates are unaffected -- they are driven
+    by the repo-level security-updates setting, not by dependabot.yml.
+
+    Note: do not rename this to `test_` plus exactly 35 word characters.
+    TruffleHog's Lob detector matches `(live|test)_\\w{35}` and flags such a
+    name as a verified secret, failing `security / trufflehog` on any diff
+    that touches the line.
+    """
+    assert not (REPO_ROOT / ".github" / "dependabot.yml").exists()
+    assert not (REPO_ROOT / ".github" / "dependabot.yaml").exists()
 
 
 def test_pre_push_hook_uses_target_remote_for_new_branch_base():

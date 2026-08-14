@@ -110,7 +110,7 @@ All changes must pass PR checks before merging to `main`:
 
 | Workflow | Scanners | Merge gate check |
 |----------|----------|------------------|
-| `tier1-security-scan` | gitleaks, TruffleHog, dependency-review | `security / summarize` |
+| `tier1-security-scan` | secret-guard, TruffleHog, dependency-review | `security / summarize` |
 | `ci` | pytest, Bandit SAST, pip-audit | `ci / summarize` |
 | `semgrep-secrets` | Semgrep `p/secrets` + `p/python` | `semgrep-secrets / semgrep-secrets` |
 | `osv-scanner` | OSV DB on `uv.lock` | `osv-scanner / scan` |
