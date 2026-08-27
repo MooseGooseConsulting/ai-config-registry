@@ -18,7 +18,7 @@ concurrency:
 jobs:
   test:
     name: ci / test
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event.pull_request.head.repo.fork || vars.CI_FORCE_HOSTED == 'true') && 'ubuntu-latest' || 'moosegoose-general' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # pin: actions/checkout@v6.0.3
 
@@ -34,7 +34,7 @@ jobs:
 
   bandit:
     name: ci / bandit
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event.pull_request.head.repo.fork || vars.CI_FORCE_HOSTED == 'true') && 'ubuntu-latest' || 'moosegoose-general' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # pin: actions/checkout@v6.0.3
 
@@ -50,7 +50,7 @@ jobs:
 
   pip-audit:
     name: ci / pip-audit
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event.pull_request.head.repo.fork || vars.CI_FORCE_HOSTED == 'true') && 'ubuntu-latest' || 'moosegoose-general' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # pin: actions/checkout@v6.0.3
 
@@ -68,7 +68,7 @@ jobs:
     name: ci / summarize
     needs: [test, bandit, pip-audit]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event.pull_request.head.repo.fork || vars.CI_FORCE_HOSTED == 'true') && 'ubuntu-latest' || 'moosegoose-general' }}
     steps:
       - name: CI gate
         env:
