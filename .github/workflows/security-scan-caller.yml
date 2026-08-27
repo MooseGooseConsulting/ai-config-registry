@@ -20,7 +20,7 @@ concurrency:
 jobs:
   secret-guard:
     name: security / secret-guard
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event.pull_request.head.repo.fork || vars.CI_FORCE_HOSTED == 'true') && 'ubuntu-latest' || 'moosegoose-general' }}
     permissions:
       contents: read
     steps:
@@ -46,7 +46,7 @@ jobs:
 
   trufflehog:
     name: security / trufflehog
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event.pull_request.head.repo.fork || vars.CI_FORCE_HOSTED == 'true') && 'ubuntu-latest' || 'moosegoose-general' }}
     permissions:
       contents: read
       security-events: write
@@ -66,7 +66,7 @@ jobs:
   dependency-review:
     name: security / dependency-review
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event.pull_request.head.repo.fork || vars.CI_FORCE_HOSTED == 'true') && 'ubuntu-latest' || 'moosegoose-general' }}
     permissions:
       contents: read
       pull-requests: read
@@ -82,7 +82,7 @@ jobs:
     name: security / summarize
     needs: [secret-guard, trufflehog, dependency-review]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event.pull_request.head.repo.fork || vars.CI_FORCE_HOSTED == 'true') && 'ubuntu-latest' || 'moosegoose-general' }}
     steps:
       - name: Security scan summary
         env:
