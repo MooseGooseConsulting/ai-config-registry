@@ -32,20 +32,17 @@ jobs:
       - name: Run repository secret guard
         run: python scripts/secret_guard.py --all-files
 
-  gitleaks:
-    name: security / gitleaks
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # pin: actions/checkout@v6.0.3
-        with:
-          fetch-depth: 0
-
-      - name: Run gitleaks
-        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e  # pin: gitleaks/gitleaks-action@v3.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # gitleaks was removed on 2026-08-14. gitleaks-action refuses to run for
+  # organization accounts without a paid license ("[MooseGooseConsulting] is an
+  # organization. License key is required." -- see
+  # https://github.com/gitleaks/gitleaks-action#-announcement). It had been
+  # failing every PR since 2026-08-10 and can never pass on a free plan, so it
+  # was blocking `security / summarize`, the actual merge gate.
+  #
+  # Coverage is retained: the trufflehog job below scans the same commits for
+  # leaked credentials, and secret-guard + semgrep-secrets still run. This
+  # matches the precedent already set in MooseGooseConsulting/screenpipe, which
+  # hit the identical wall and replaced gitleaks with TruffleHog.
 
   trufflehog:
     name: security / trufflehog
@@ -83,14 +80,13 @@ jobs:
 
   summarize:
     name: security / summarize
-    needs: [secret-guard, gitleaks, trufflehog, dependency-review]
+    needs: [secret-guard, trufflehog, dependency-review]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Security scan summary
         env:
           SECRET_GUARD: ${{ needs.secret-guard.result }}
-          GITLEAKS: ${{ needs.gitleaks.result }}
           TRUFFLEHOG: ${{ needs.trufflehog.result }}
           DEPREVIEW: ${{ needs.dependency-review.result }}
         run: |
@@ -98,10 +94,9 @@ jobs:
           echo "| Scanner | Status |"
           echo "| --- | --- |"
           echo "| secret-guard | ${SECRET_GUARD} |"
-          echo "| gitleaks | ${GITLEAKS} |"
           echo "| trufflehog | ${TRUFFLEHOG} |"
           echo "| dependency-review | ${DEPREVIEW:-skipped} |"
-          for status in "$SECRET_GUARD" "$GITLEAKS" "$TRUFFLEHOG"; do
+          for status in "$SECRET_GUARD" "$TRUFFLEHOG"; do
             if [ "$status" = "failure" ] || [ "$status" = "cancelled" ]; then
               exit 1
             fi
