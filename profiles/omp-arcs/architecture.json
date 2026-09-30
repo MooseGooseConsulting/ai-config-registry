@@ -26,7 +26,7 @@
     { "id": "sentry-guardian", "from": "sentry", "to": "guardian", "fromSide": "bottom", "toSide": "top", "label": "WAKE only" },
     { "id": "guardian-mailbox", "from": "guardian", "to": "mailbox", "label": "advice" },
     { "id": "mailbox-delivery", "from": "mailbox", "to": "delivery", "label": "fresh only" },
-    { "id": "delivery-worker", "from": "delivery", "to": "worker", "fromSide": "right", "toSide": "bottom", "variant": "dashed", "label": "nudge, not veto", "via": [[1150, 638], [1150, 245], [570, 245]] }
+    { "id": "delivery-worker", "from": "delivery", "to": "worker", "fromSide": "right", "toSide": "top", "variant": "dashed", "label": "nudge, not veto", "via": [[1150, 638], [1150, 30], [570, 30]] }
   ],
   "cards": [
     { "dot": "cyan", "title": "Use the cheaper workers more", "items": ["Scout: MiMo V2.6 Flash / low", "Worker: DeepSeek V4.1 Flash / high", "Reviewer: GPT-6 Astra / medium"] },
