@@ -1,0 +1,21 @@
+{
+  "name": "@moosegoose/omp-arcs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Periodic, nonblocking Arcs-style supervision and explicit OMP worker routing",
+  "omp": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  },
+  "peerDependencies": {
+    "@oh-my-pi/pi-coding-agent": "18.4.4"
+  },
+  "devDependencies": {
+    "@oh-my-pi/pi-coding-agent": "18.4.4"
+  }
+}

@@ -1,0 +1,55 @@
+name: omp-arcs
+on:
+  pull_request:
+    paths: ['profiles/omp-arcs/**', '.github/workflows/omp-arcs.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: omp-arcs-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: false
+      - name: Scheduler and mocked host contracts (no model calls)
+        run: node --test profiles/omp-arcs/tests/*.test.mjs
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: '1.4.2'
+      - name: Install the exact native OMP version
+        working-directory: profiles/omp-arcs
+        run: bun install
+      - name: Real SDK extension-load smoke test (no model calls)
+        working-directory: profiles/omp-arcs
+        run: bun tests/native-smoke.ts
+  architecture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: false
+      - name: Check out the inspected OMP and Archify sources
+        run: node profiles/omp-arcs/bootstrap.mjs "$RUNNER_TEMP/omp-arcs-upstream"
+      - name: Install Archify from its committed dependency lock
+        run: npm ci --prefix "$RUNNER_TEMP/omp-arcs-upstream/archify/archify"
+      - name: Render and validate the actual Archify diagram
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p profiles/omp-arcs/build
+          node "$RUNNER_TEMP/omp-arcs-upstream/archify/archify/bin/archify.mjs" finalize architecture \
+            profiles/omp-arcs/architecture.json profiles/omp-arcs/build/omp-arcs.html \
+            --quality showcase --json | tee profiles/omp-arcs/build/finalize.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: omp-arcs-architecture
+          path: profiles/omp-arcs/build/
+          if-no-files-found: error
+          retention-days: 14

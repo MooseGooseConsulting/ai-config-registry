@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "cadence": { "everyTools": 12, "afterMs": 90000, "minIntervalMs": 20000 },
+  "freshness": { "ttlMs": 60000, "maxEventLag": 24, "cooldownMs": 120000 },
+  "limits": { "events": 96, "reviewEvents": 32, "eventChars": 600, "timeoutMs": 45000 },
+  "providerPreference": ["deepseek", "xiaomi", "xiaomi-token-plan-sgp", "xiaomi-token-plan-cn", "openai-codex", "openai", "openrouter", "commandcode"],
+  "roles": {
+    "scout": { "ids": ["mimo-v2.6-flash", "deepseek-v4.1-flash", "deepseek-flash"], "thinking": "low" },
+    "worker": { "ids": ["deepseek-v4.1-flash", "deepseek-flash", "mimo-v2.6-pro"], "thinking": "high" },
+    "reviewer": { "ids": ["gpt-6-astra"], "thinking": "medium" },
+    "sentry": { "ids": ["deepseek-v4.1-flash", "deepseek-flash", "mimo-v2.6-flash"], "thinking": "low" },
+    "guardian": { "ids": ["gpt-6-astra"], "thinking": "medium" }
+  }
+}

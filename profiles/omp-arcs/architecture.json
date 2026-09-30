@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "OMP + Arcs: periodic supervision",
+    "output": "omp-arcs.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "intent", "type": "frontend", "label": "Owner intent", "sublabel": "Original goal + current request", "pos": [100, 100], "size": [240, 76] },
+    { "id": "worker", "type": "backend", "label": "OMP primary", "sublabel": "Existing driver stays in control", "pos": [450, 100], "size": [240, 76] },
+    { "id": "tools", "type": "backend", "label": "Tools and workspace", "sublabel": "Ordinary autonomous execution", "pos": [800, 100], "size": [240, 76] },
+    { "id": "events", "type": "database", "label": "Bounded observation", "sublabel": "Tool results + intent epoch", "pos": [800, 350], "size": [240, 76] },
+    { "id": "clock", "type": "backend", "label": "Periodic scheduler", "sublabel": "12 tools or 90 seconds of activity", "pos": [450, 350], "size": [240, 76] },
+    { "id": "sentry", "type": "backend", "label": "Cheap sentry", "sublabel": "DeepSeek low: sleep or wake", "pos": [100, 350], "size": [240, 76] },
+    { "id": "guardian", "type": "backend", "label": "Independent guardian", "sublabel": "Astra medium: rare escalation", "pos": [100, 600], "size": [240, 76] },
+    { "id": "mailbox", "type": "messagebus", "label": "Freshness mailbox", "sublabel": "Epoch + age + lag + dedupe", "pos": [450, 600], "size": [240, 76] },
+    { "id": "delivery", "type": "backend", "label": "Passive delivery", "sublabel": "Next tool result; never a restart", "pos": [800, 600], "size": [240, 76] }
+  ],
+  "connections": [
+    { "id": "intent-worker", "from": "intent", "to": "worker", "label": "task", "variant": "emphasis" },
+    { "id": "worker-tools", "from": "worker", "to": "tools", "label": "execute", "variant": "emphasis" },
+    { "id": "tools-events", "from": "tools", "to": "events", "fromSide": "bottom", "toSide": "top", "label": "observe" },
+    { "id": "events-clock", "from": "events", "to": "clock", "fromSide": "left", "toSide": "right", "label": "new data" },
+    { "id": "clock-sentry", "from": "clock", "to": "sentry", "fromSide": "left", "toSide": "right", "label": "check" },
+    { "id": "sentry-guardian", "from": "sentry", "to": "guardian", "fromSide": "bottom", "toSide": "top", "label": "WAKE only" },
+    { "id": "guardian-mailbox", "from": "guardian", "to": "mailbox", "label": "advice" },
+    { "id": "mailbox-delivery", "from": "mailbox", "to": "delivery", "label": "fresh only" },
+    { "id": "delivery-worker", "from": "delivery", "to": "worker", "fromSide": "right", "toSide": "bottom", "variant": "dashed", "label": "nudge, not veto", "via": [[1150, 638], [1150, 245], [570, 245]] }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Use the cheaper workers more", "items": ["Scout: MiMo V2.6 Flash / low", "Worker: DeepSeek V4.1 Flash / high", "Reviewer: GPT-6 Astra / medium"] },
+    { "dot": "emerald", "title": "Main execution stays autonomous", "items": ["No inference awaited in tool hooks", "No supervisor tools or child dispatch", "No restart of an idle primary"] },
+    { "dot": "amber", "title": "A deliberately scoped pilot", "items": ["One pipeline per primary session", "No full recursive child trajectory", "No edits to AGENTS.md or product goals"] }
+  ]
+}
