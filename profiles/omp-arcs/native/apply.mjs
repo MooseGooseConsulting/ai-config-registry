@@ -192,7 +192,7 @@ edit("packages/coding-agent/src/session/session-advisors.ts", text => {
     "\t\t\t\treturn;\n" +
     "\t\t\t}\n" +
     "\t\t\tconst judge = resolveJudge({ settings: this.#host.settings, registry: this.#host.modelRegistry, sessionId: this.#host.sessionId(), purpose: \"advisor-periodic-gate\", onUsage: journalJudgmentUsage(this.#host.sessionManager), cache: sharedJudgmentCache() });\n" +
-    "\t\t\tconst state = buildPeriodicAdvisorGateState(messages, willContinue !== true, turnsSinceGate);\n" +
+    "\t\t\tconst state = buildPeriodicAdvisorGateState(messages, willContinue !== true, turnsSinceGate, text => this.#host.obfuscator()?.obfuscate(text) ?? text);\n" +
     "\t\t\tconst { answers } = await judge.judge({ state, questions: { wake: PERIODIC_ADVISOR_WAKE_QUESTION } });\n" +
     "\t\t\tif (epoch !== this.#periodicAdvisorEpoch || !this.#advisorEnabled || this.#host.isDisposed()) return;\n" +
     "\t\t\tconst live = this.#host.agent.state.messages;\n" +
