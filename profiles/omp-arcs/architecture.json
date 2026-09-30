@@ -1,36 +1,32 @@
 {
   "schema_version": 1,
   "diagram_type": "architecture",
-  "meta": {
-    "title": "OMP + Arcs: periodic supervision",
-    "output": "omp-arcs.html",
-    "quality_profile": "showcase"
-  },
+  "meta": { "title": "OMP + Arcs: native periodic advisor gating", "output": "omp-arcs.html", "quality_profile": "showcase" },
   "components": [
-    { "id": "intent", "type": "frontend", "label": "Owner intent", "sublabel": "Original goal + current request", "pos": [100, 100], "size": [240, 76] },
-    { "id": "worker", "type": "backend", "label": "OMP primary", "sublabel": "Existing driver stays in control", "pos": [450, 100], "size": [240, 76] },
-    { "id": "tools", "type": "backend", "label": "Tools and workspace", "sublabel": "Ordinary autonomous execution", "pos": [800, 100], "size": [240, 76] },
-    { "id": "events", "type": "database", "label": "Bounded observation", "sublabel": "Tool results + intent epoch", "pos": [800, 350], "size": [240, 76] },
-    { "id": "clock", "type": "backend", "label": "Periodic scheduler", "sublabel": "12 tools or 90 seconds of activity", "pos": [450, 350], "size": [240, 76] },
-    { "id": "sentry", "type": "backend", "label": "Cheap sentry", "sublabel": "DeepSeek low: sleep or wake", "pos": [100, 350], "size": [240, 76] },
-    { "id": "guardian", "type": "backend", "label": "Independent guardian", "sublabel": "Astra medium: rare escalation", "pos": [100, 600], "size": [240, 76] },
-    { "id": "mailbox", "type": "messagebus", "label": "Freshness mailbox", "sublabel": "Epoch + age + lag + dedupe", "pos": [450, 600], "size": [240, 76] },
-    { "id": "delivery", "type": "backend", "label": "Passive delivery", "sublabel": "Next tool result; never a restart", "pos": [800, 600], "size": [240, 76] }
+    { "id": "intent", "type": "frontend", "label": "Owner intent", "sublabel": "Request + Goal mode objective", "pos": [100, 100], "size": [240, 76] },
+    { "id": "worker", "type": "backend", "label": "OMP primary", "sublabel": "Normal autonomous execution", "pos": [450, 100], "size": [240, 76] },
+    { "id": "tools", "type": "backend", "label": "Tools / task / Vibe", "sublabel": "Workers and workspace activity", "pos": [800, 100], "size": [240, 76] },
+    { "id": "events", "type": "database", "label": "Bounded trajectory", "sublabel": "Recent turns + owner requests", "pos": [800, 350], "size": [240, 76] },
+    { "id": "clock", "type": "backend", "label": "Periodic eligibility", "sublabel": "Every N turns or terminal boundary", "pos": [450, 350], "size": [240, 76] },
+    { "id": "judge", "type": "backend", "label": "Native judge role", "sublabel": "JEV probability of WAKE", "pos": [100, 350], "size": [240, 76] },
+    { "id": "advisor", "type": "backend", "label": "Native OMP Advisor", "sublabel": "Only runs after judge wake", "pos": [100, 600], "size": [240, 76] },
+    { "id": "watchdog", "type": "messagebus", "label": "WATCHDOG + emission guard", "sublabel": "Existing OMP sidecar semantics", "pos": [450, 600], "size": [240, 76] },
+    { "id": "delivery", "type": "backend", "label": "Advisor delivery", "sublabel": "Existing nit / concern / blocker paths", "pos": [800, 600], "size": [240, 76] }
   ],
   "connections": [
-    { "id": "intent-worker", "from": "intent", "to": "worker", "label": "task", "variant": "emphasis" },
+    { "id": "intent-worker", "from": "intent", "to": "worker", "label": "goal", "variant": "emphasis" },
     { "id": "worker-tools", "from": "worker", "to": "tools", "label": "execute", "variant": "emphasis" },
     { "id": "tools-events", "from": "tools", "to": "events", "fromSide": "bottom", "toSide": "top", "label": "observe" },
-    { "id": "events-clock", "from": "events", "to": "clock", "fromSide": "left", "toSide": "right", "label": "new data" },
-    { "id": "clock-sentry", "from": "clock", "to": "sentry", "fromSide": "left", "toSide": "right", "label": "check" },
-    { "id": "sentry-guardian", "from": "sentry", "to": "guardian", "fromSide": "bottom", "toSide": "top", "label": "WAKE only" },
-    { "id": "guardian-mailbox", "from": "guardian", "to": "mailbox", "label": "advice" },
-    { "id": "mailbox-delivery", "from": "mailbox", "to": "delivery", "label": "fresh only" },
-    { "id": "delivery-worker", "from": "delivery", "to": "worker", "fromSide": "right", "toSide": "top", "variant": "dashed", "label": "nudge, not veto", "via": [[1150, 638], [1150, 30], [570, 30]] }
+    { "id": "events-clock", "from": "events", "to": "clock", "fromSide": "left", "toSide": "right", "label": "bounded state" },
+    { "id": "clock-judge", "from": "clock", "to": "judge", "fromSide": "left", "toSide": "right", "label": "typed judgment" },
+    { "id": "judge-advisor", "from": "judge", "to": "advisor", "fromSide": "bottom", "toSide": "top", "label": "WAKE only" },
+    { "id": "advisor-watchdog", "from": "advisor", "to": "watchdog", "label": "advice" },
+    { "id": "watchdog-delivery", "from": "watchdog", "to": "delivery", "label": "guarded" },
+    { "id": "delivery-worker", "from": "delivery", "to": "worker", "fromSide": "right", "toSide": "top", "variant": "dashed", "label": "native delivery", "via": [[1150, 638], [1150, 30], [570, 30]] }
   ],
   "cards": [
-    { "dot": "cyan", "title": "Use the cheaper workers more", "items": ["Scout: MiMo V2.6 Flash / low", "Worker: DeepSeek V4.1 Flash / high", "Reviewer: GPT-6 Astra / medium"] },
-    { "dot": "emerald", "title": "Main execution stays autonomous", "items": ["No inference awaited in tool hooks", "No supervisor tools or child dispatch", "No restart of an idle primary"] },
-    { "dot": "amber", "title": "A deliberately scoped pilot", "items": ["One pipeline per primary session", "No full recursive child trajectory", "No edits to AGENTS.md or product goals"] }
+    { "dot": "cyan", "title": "Use OMP primitives", "items": ["Judge: native typed System One call", "Advisor: existing OMP sidecar", "Goal / task / Vibe remain unchanged"] },
+    { "dot": "emerald", "title": "Suggested routing", "items": ["smol/scout: MiMo V2.6 Flash low", "task/worker: DeepSeek V4.1 Flash high", "judge: JEV", "advisor/reviewer: Astra medium"] },
+    { "dot": "amber", "title": "Staging, not permanent ownership", "items": ["Patch is tested against pinned upstream OMP", "Move into a MooseGoose OMP fork when that repo exists", "Do not merge registry PR as the final home"] }
   ]
 }
