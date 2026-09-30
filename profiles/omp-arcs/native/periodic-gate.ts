@@ -1,5 +1,5 @@
 import type { AgentMessage } from "@oh-my-pi/pi-agent-core";
-import type { NoulAnswer, NoulQuestion } from "@oh-my-pi/pi-ai";
+import type { JsonValue, NoulAnswer, NoulQuestion } from "@oh-my-pi/pi-ai";
 
 const OWNER_CHARS = 3_000;
 const RECENT_CHARS = 10_000;
@@ -87,7 +87,7 @@ function renderMessages(
   return { text: parts.join("\n\n"), truncated };
 }
 
-export interface PeriodicAdvisorGateState {
+export interface PeriodicAdvisorGateState extends Record<string, JsonValue> {
   ownerRequests: string;
   recentActivity: string;
   partial: boolean;
