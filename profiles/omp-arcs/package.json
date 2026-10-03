@@ -1,0 +1,10 @@
+{
+  "name": "@moosegoose/omp-arcs",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "OMP specialist agents plus a staging patch for native periodic advisor gating",
+  "omp": { "extensions": ["./index.ts"] },
+  "peerDependencies": { "@oh-my-pi/pi-coding-agent": "18.4.4" },
+  "devDependencies": { "@oh-my-pi/pi-coding-agent": "18.4.4" }
+}

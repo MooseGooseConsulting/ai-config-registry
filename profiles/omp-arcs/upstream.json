@@ -1,0 +1,13 @@
+{
+  "omp": {
+    "url": "https://github.com/can1357/oh-my-pi.git",
+    "revision": "7057eb9cdda91791fc4fbce4a60f33139bda3b8b",
+    "packageVersion": "18.4.4"
+  },
+  "archify": {
+    "url": "https://github.com/tt-a1i/archify.git",
+    "revision": "d5a1333d7447c866a765adac7d4d062f2f02e4d2"
+  },
+  "bunVersion": "1.4.2",
+  "inspectedOn": "2026-09-30"
+}

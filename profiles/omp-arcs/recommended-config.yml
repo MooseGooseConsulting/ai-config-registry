@@ -1,0 +1,14 @@
+# Example only. Keep only routes actually authenticated in your OMP catalog.
+modelRoles:
+  judge: typesafe/jev-latest
+  advisor: openai-codex/gpt-6-astra:medium
+  smol: xiaomi/mimo-v2.6-flash:low
+  task: deepseek/deepseek-v4.1-flash:high
+
+advisor:
+  enabled: true
+  reviewMode: periodic
+  periodicEveryTurns: 4
+  periodicWakeThreshold: 0.65
+  periodicRequireNativeJudge: true
+  syncBacklog: off
