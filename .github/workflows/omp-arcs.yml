@@ -32,7 +32,19 @@ jobs:
           set -euo pipefail
           mkdir -p profiles/omp-arcs/build
           cd "$RUNNER_TEMP/omp-arcs-upstream/omp"
-          git diff --binary > "$GITHUB_WORKSPACE/profiles/omp-arcs/build/omp-native-periodic-advisor.patch"
+          git add -A
+          git diff --cached --binary > "$GITHUB_WORKSPACE/profiles/omp-arcs/build/omp-native-periodic-advisor.patch"
+      - name: Verify transplant patch on a second clean pinned OMP checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          node profiles/omp-arcs/bootstrap.mjs "$RUNNER_TEMP/omp-arcs-transplant-check"
+          patch="$GITHUB_WORKSPACE/profiles/omp-arcs/build/omp-native-periodic-advisor.patch"
+          checkout="$RUNNER_TEMP/omp-arcs-transplant-check/omp"
+          git -C "$checkout" apply --check "$patch"
+          git -C "$checkout" apply "$patch"
+          test -f "$checkout/packages/coding-agent/src/advisor/periodic-gate.ts"
+          test -f "$checkout/packages/coding-agent/test/advisor/periodic-gate.test.ts"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -65,3 +77,4 @@ jobs:
           path: profiles/omp-arcs/build/
           if-no-files-found: error
           retention-days: 14
+

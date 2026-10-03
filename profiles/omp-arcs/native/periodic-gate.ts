@@ -18,9 +18,22 @@ export const PERIODIC_ADVISOR_WAKE_QUESTION: NoulQuestion = {
   },
 };
 
-function bound(text: string, max: number): { text: string; truncated: boolean } {
+function bound(
+  text: string,
+  max: number,
+  preserve: "head" | "tail" = "head",
+): { text: string; truncated: boolean } {
   if (text.length <= max) return { text, truncated: false };
-  return { text: text.slice(0, max) + "\n...[truncated]", truncated: true };
+  const marker =
+    preserve === "tail"
+      ? "\n...[older content omitted; newest content follows]\n"
+      : "\n...[newer content omitted]";
+  const contentChars = Math.max(0, max - marker.length);
+  const content = preserve === "tail" ? text.slice(-contentChars) : text.slice(0, contentChars);
+  return {
+    text: preserve === "tail" ? marker + content : content + marker,
+    truncated: true,
+  };
 }
 
 function safeJson(value: unknown): string {
@@ -69,7 +82,7 @@ function projectMessage(message: AgentMessage): { text: string; truncated: boole
     body = safeJson(raw);
   }
 
-  const projected = bound(role + ": " + body, PER_MESSAGE_CHARS);
+  const projected = bound(role + ": " + body, PER_MESSAGE_CHARS, "tail");
   return projected;
 }
 
@@ -110,7 +123,7 @@ export function buildPeriodicAdvisorGateState(
   const ownerRendered = renderMessages(ownerMessages, transform);
   const recentRendered = renderMessages(messages.slice(-RECENT_MESSAGES), transform);
   const owner = bound(ownerRendered.text, OWNER_CHARS);
-  const recent = bound(recentRendered.text, RECENT_CHARS);
+  const recent = bound(recentRendered.text, RECENT_CHARS, "tail");
 
   return {
     ownerRequests: owner.text,
@@ -145,3 +158,4 @@ export function shouldWakePeriodicAdvisor(
   const bounded = Math.min(1, Math.max(0, threshold));
   return answer.noul >= bounded;
 }
+

@@ -41,4 +41,29 @@ describe("periodic advisor gate", () => {
     expect(state.partial).toBe(true);
     expect(state.turnsSinceGate).toBe(4);
   });
+
+  it("keeps the newest activity when the aggregate recent window is truncated", () => {
+    const messages = Array.from({ length: 20 }, (_, i) => assistant(`${i}: ${"x".repeat(700)}`));
+    messages[messages.length - 1] = assistant("LATEST_TURN_EVIDENCE");
+
+    const state = buildPeriodicAdvisorGateState(messages, false, 4);
+
+    expect(state.recentActivity).toContain("...[older content omitted; newest content follows]");
+    expect(state.recentActivity).toContain("LATEST_TURN_EVIDENCE");
+    expect(state.partial).toBe(true);
+  });
+
+  it("keeps the end of an oversized message with a clear truncation marker", () => {
+    const state = buildPeriodicAdvisorGateState(
+      [assistant(`OLDEST_ONLY_SENTINEL ${"old detail ".repeat(400)}LATEST_MESSAGE_EVIDENCE`)],
+      false,
+      1,
+    );
+
+    expect(state.recentActivity).toContain("...[older content omitted; newest content follows]");
+    expect(state.recentActivity).toContain("LATEST_MESSAGE_EVIDENCE");
+    expect(state.recentActivity).not.toContain("OLDEST_ONLY_SENTINEL");
+    expect(state.partial).toBe(true);
+  });
 });
+
