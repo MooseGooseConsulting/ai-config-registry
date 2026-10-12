@@ -1,5 +1,22 @@
 # AI Config Registry
 
+> **This repository has moved.** Active development continues at
+> [`MooseGooseConsulting/agent-control-plane`](../agent-control-plane) under
+> [`packages/config-inventory/`](https://github.com/MooseGooseConsulting/agent-control-plane/pull/20).
+>
+> - Scanner, dashboard, secret guard, SQL, sync tooling, and tests: `packages/config-inventory/`
+> - Scan → control-plane ingestion: `tools/ingest_registry_scan.py` there
+> - Migration manifest: `docs/migration-ai-config-registry.md` there
+>
+> This repo is **not archived**: unmerged work remains here until it is accounted
+> for — PR #28 (OMP/ARCS pilot, staged read-only under
+> `packages/config-inventory/staging/omp-arcs/`) and issue #30 (Arcs
+> implementation spike). Windows scheduled tasks and Cursor hooks registered
+> from this checkout still point at it; re-register them from the new package
+> before this checkout is deleted.
+
+---
+
 This repository stores registry metadata and automation for AI tooling configuration, including skills, MCP servers, hooks, CLI tools, and secret manifests.
 
 ## Scope
