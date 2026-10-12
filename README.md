@@ -5,6 +5,7 @@ This repository stores registry metadata and automation for AI tooling configura
 ## Scope
 
 - Keep registry definitions and bootstrap scripts here.
+- Staged integrations: [OMP Arcs native periodic advisor pilot](profiles/omp-arcs/README.md) documents a source-only patch and its pinned-source CI checks; it does not activate an OMP runtime.
 - Keep SQL schema and migration-style files here.
 - Keep planning/status notes in `working/`.
 

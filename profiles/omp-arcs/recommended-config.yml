@@ -11,4 +11,4 @@ advisor:
   periodicEveryTurns: 4
   periodicWakeThreshold: 0.65
   periodicRequireNativeJudge: true
-  syncBacklog: off
+  syncBacklog: "off"

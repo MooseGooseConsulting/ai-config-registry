@@ -70,6 +70,21 @@ The apply script refuses any OMP revision except the pin in upstream.json. CI
 performs those exact steps and uploads the resulting git diff as a transplantable
 artifact. That patch is the artifact to commit into a future OMP fork.
 
+The lifecycle patch targets OMP commit
+`7057eb9cdda91791fc4fbce4a60f33139bda3b8b`. Its periodic early return remains
+inside `onPrimaryTurnEnd`'s existing `try/finally`: terminal boundaries still
+flush deferred notes and schedule the gate, and a continuing boundary still
+clears the terminal-unwind guard. CI executes the patched method body in
+`native/lifecycle-regression.test.mjs`, then runs the gate tests and typecheck.
+These checks validate the staged source artifact; they do not activate an OMP
+runtime or change user configuration.
+
+CI also checks out Archify at the exact revision in upstream.json and runs its
+renderer. The workflow grants only `contents: read` and disables persisted
+checkout credentials. It still executes package installation and tooling from
+the pinned OMP and Archify source trees, so those revisions and lockfiles are
+security-relevant inputs; inspect them before changing the pins.
+
 ## Deliberately unchanged
 
 This does not alter AGENTS.md, product goals, specs, project documentation, Goal
