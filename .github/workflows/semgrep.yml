@@ -21,7 +21,7 @@ jobs:
     name: semgrep-secrets / semgrep-secrets
     runs-on: ubuntu-latest
     container:
-      image: semgrep/semgrep:1.85.0
+      image: semgrep/semgrep:1.180.0@sha256:529ee8a277ec8adc5b534d7c74eea0a47e9de21d62852b6ba7ac6ba9566845c3
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # pin: actions/checkout@v6.0.3
         with:
