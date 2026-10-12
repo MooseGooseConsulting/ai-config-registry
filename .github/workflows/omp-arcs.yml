@@ -20,6 +20,8 @@ jobs:
         run: node profiles/omp-arcs/bootstrap.mjs "$RUNNER_TEMP/omp-arcs-upstream"
       - name: Apply native judge-to-advisor patch
         run: node profiles/omp-arcs/native/apply.mjs "$RUNNER_TEMP/omp-arcs-upstream/omp"
+      - name: Verify periodic advisor lifecycle cleanup
+        run: OMP_SESSION_ADVISORS_SOURCE="$RUNNER_TEMP/omp-arcs-upstream/omp/packages/coding-agent/src/session/session-advisors.ts" node --test profiles/omp-arcs/native/lifecycle-regression.test.mjs
       - name: Install pinned OMP workspace dependencies
         run: cd "$RUNNER_TEMP/omp-arcs-upstream/omp" && bun install --frozen-lockfile
       - name: Test periodic gate semantics

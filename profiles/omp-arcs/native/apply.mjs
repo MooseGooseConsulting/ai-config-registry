@@ -150,15 +150,15 @@ edit("packages/coding-agent/src/session/session-advisors.ts", text => {
   const replacement =
     "\t\tconst terminalBoundary = willContinue !== true;\n" +
     "\t\tif (terminalBoundary) this.#terminalUnwindActive = true;\n" +
-    "\t\tif (cfgAdvisorReviewMode.get(this.#host.settings) === \"periodic\") {\n" +
-    "\t\t\tthis.#advisorPrimaryTurnsCompleted++;\n" +
-    "\t\t\tif (terminalBoundary) {\n" +
-    "\t\t\t\tfor (const advisor of this.#advisors) advisor.adviseTool.flushDeferredNotes();\n" +
-    "\t\t\t}\n" +
-    "\t\t\tthis.#schedulePeriodicAdvisorReview(messages, willContinue);\n" +
-    "\t\t\treturn;\n" +
-    "\t\t}\n" +
     "\t\ttry {\n" +
+    "\t\t\tif (cfgAdvisorReviewMode.get(this.#host.settings) === \"periodic\") {\n" +
+    "\t\t\t\tthis.#advisorPrimaryTurnsCompleted++;\n" +
+    "\t\t\t\tif (terminalBoundary) {\n" +
+    "\t\t\t\t\tfor (const advisor of this.#advisors) advisor.adviseTool.flushDeferredNotes();\n" +
+    "\t\t\t\t}\n" +
+    "\t\t\t\tthis.#schedulePeriodicAdvisorReview(messages, willContinue);\n" +
+    "\t\t\t\treturn;\n" +
+    "\t\t\t}\n" +
     "\t\t\tthis.#retuneAutoThinkingAdvisors();\n" +
     "\t\t\tthis.#advisorPrimaryTurnsCompleted++;\n";
   text = once(text, opening, replacement, "periodic onPrimaryTurnEnd branch");
