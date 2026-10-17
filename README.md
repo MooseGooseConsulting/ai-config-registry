@@ -22,7 +22,9 @@ This repository stores registry metadata and automation for AI tooling configura
 
 ## Scope
 
-This checkout is legacy and read-only for new registry work. Add registry definitions, bootstrap scripts, SQL schema and migration-style files, and planning notes in [`packages/config-inventory/`](https://github.com/MooseGooseConsulting/agent-control-plane/tree/main/packages/config-inventory). Copies that remain in this repository, including notes in `working/`, are historical.
+- Keep registry definitions and bootstrap scripts here.
+- Keep SQL schema and migration-style files here.
+- Keep planning/status notes in `working/`.
 
 ## Boundaries
 
