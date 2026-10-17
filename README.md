@@ -22,10 +22,9 @@ This repository stores registry metadata and automation for AI tooling configura
 
 ## Scope
 
-- Keep registry definitions and bootstrap scripts here.
-- Staged integrations: [OMP Arcs native periodic advisor pilot](profiles/omp-arcs/README.md) documents a source-only patch and its pinned-source CI checks; it does not activate an OMP runtime.
-- Keep SQL schema and migration-style files here.
-- Keep planning/status notes in `working/`.
+This checkout is legacy and read-only for new registry work. Add registry definitions, bootstrap scripts, SQL schema and migration-style files, and planning notes in [`packages/config-inventory/`](https://github.com/MooseGooseConsulting/agent-control-plane/tree/main/packages/config-inventory). Copies that remain in this repository, including notes in `working/`, are historical.
+
+- Staged integrations: [OMP Arcs native periodic advisor pilot](profiles/omp-arcs/README.md) documents a source-only patch and its pinned-source CI checks; it does not activate an OMP runtime. That pilot stays in this checkout until its own pull request is resolved.
 
 ## Boundaries
 
