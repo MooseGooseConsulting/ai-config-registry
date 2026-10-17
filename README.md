@@ -9,10 +9,12 @@
 > - Scan → control-plane ingestion: `tools/ingest_registry_scan.py` there
 > - Migration manifest: `docs/migration-ai-config-registry.md` there
 >
-> This repo is **not archived**: unmerged work remains here until it is accounted
-> for — PR #28 (OMP/ARCS pilot, staged read-only under
-> `packages/config-inventory/staging/omp-arcs/`) and issue #30 (Arcs
-> implementation spike). Windows scheduled tasks and Cursor hooks registered
+> This repo is **not archived**. [PR #28](https://github.com/MooseGooseConsulting/ai-config-registry/pull/28)
+> merged the OMP/ARCS periodic-advisor pilot into
+> [`profiles/omp-arcs/`](profiles/omp-arcs/README.md) as an experimental baseline;
+> it does not activate an OMP runtime. The still-open item is
+> [issue #30](https://github.com/MooseGooseConsulting/ai-config-registry/issues/30)
+> (Arcs implementation spike). Windows scheduled tasks and Cursor hooks registered
 > from this checkout still point at it; re-register them from the new package
 > before this checkout is deleted.
 
@@ -24,7 +26,7 @@ This repository stores registry metadata and automation for AI tooling configura
 
 This checkout is legacy and read-only for new registry work. Add registry definitions, bootstrap scripts, SQL schema and migration-style files, and planning notes in [`packages/config-inventory/`](https://github.com/MooseGooseConsulting/agent-control-plane/tree/main/packages/config-inventory). Copies that remain in this repository, including notes in `working/`, are historical.
 
-- Staged integrations: [OMP Arcs native periodic advisor pilot](profiles/omp-arcs/README.md) documents a source-only patch and its pinned-source CI checks; it does not activate an OMP runtime. That pilot stays in this checkout until its own pull request is resolved.
+- Staged integrations: [OMP Arcs native periodic advisor pilot](profiles/omp-arcs/README.md) merged in [PR #28](https://github.com/MooseGooseConsulting/ai-config-registry/pull/28). It documents a source-only patch and its pinned-source CI checks; it does not activate an OMP runtime. [Issue #30](https://github.com/MooseGooseConsulting/ai-config-registry/issues/30) remains the open Arcs implementation spike.
 
 ## Boundaries
 
