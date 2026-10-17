@@ -1,8 +1,9 @@
 # AI Config Registry
 
 > **This repository has moved.** Active development continues at
-> [`MooseGooseConsulting/agent-control-plane`](../agent-control-plane) under
-> [`packages/config-inventory/`](https://github.com/MooseGooseConsulting/agent-control-plane/pull/20).
+> [`MooseGooseConsulting/agent-control-plane`](https://github.com/MooseGooseConsulting/agent-control-plane) under
+> [`packages/config-inventory/`](https://github.com/MooseGooseConsulting/agent-control-plane/tree/main/packages/config-inventory).
+> The migration pull request is [agent-control-plane#20](https://github.com/MooseGooseConsulting/agent-control-plane/pull/20).
 >
 > - Scanner, dashboard, secret guard, SQL, sync tooling, and tests: `packages/config-inventory/`
 > - Scan → control-plane ingestion: `tools/ingest_registry_scan.py` there
@@ -21,9 +22,7 @@ This repository stores registry metadata and automation for AI tooling configura
 
 ## Scope
 
-- Keep registry definitions and bootstrap scripts here.
-- Keep SQL schema and migration-style files here.
-- Keep planning/status notes in `working/`.
+This checkout is legacy and read-only for new registry work. Add registry definitions, bootstrap scripts, SQL schema and migration-style files, and planning notes in [`packages/config-inventory/`](https://github.com/MooseGooseConsulting/agent-control-plane/tree/main/packages/config-inventory). Copies that remain in this repository, including notes in `working/`, are historical.
 
 ## Boundaries
 
